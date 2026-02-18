@@ -1,6 +1,25 @@
+# Dependencies
 node_modules/
+**/node_modules/
+
+# Environment Variables (Security)
 .env
-.DS_Store
+.env.local
+.env.*.local
+*.env
+
+# Build Outputs (Vite)
 dist/
 build/
+
+# IDE & Editor Files
 .idea/
+.vscode/
+
+# OS System Files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+*.log
