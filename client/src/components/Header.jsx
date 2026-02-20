@@ -1,10 +1,20 @@
-import { Link } from 'react-router-dom';
-import { FaShoppingCart, FaUser } from 'react-icons/fa';
-import { useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaShoppingCart, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { useContext, useState } from 'react';
 import { CartContext } from '../context/CartContext';
+import { AuthContext } from '../context/AuthContext';
 
 const Header = () => {
   const { cartItems } = useContext(CartContext);
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const logoutHandler = () => {
+    logout();
+    setDropdownOpen(false);
+    navigate('/login');
+  };
 
   return (
     <header className="bg-gray-900 text-white">
@@ -27,11 +37,43 @@ const Header = () => {
                 )}
               </Link>
             </li>
-            <li>
-              <Link to="/login" className="flex items-center hover:text-gray-300 transition">
-                <FaUser className="mr-1" /> Sign In
-              </Link>
-            </li>
+            
+            {user ? (
+              <li className="relative">
+                <button 
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center hover:text-gray-300 transition focus:outline-none"
+                >
+                  <FaUser className="mr-1" /> {user.name}
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 text-gray-800">
+                    <Link 
+                      to="/profile" 
+                      className="block px-4 py-2 hover:bg-gray-100"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={logoutHandler}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+                    >
+                      <div className="flex items-center">
+                        <FaSignOutAlt className="mr-2" /> Logout
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </li>
+            ) : (
+              <li>
+                <Link to="/login" className="flex items-center hover:text-gray-300 transition">
+                  <FaUser className="mr-1" /> Sign In
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </div>
