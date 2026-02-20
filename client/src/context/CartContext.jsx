@@ -8,9 +8,27 @@ export const CartProvider = ({ children }) => {
     return storedCart ? JSON.parse(storedCart) : [];
   });
 
+  const [shippingAddress, setShippingAddress] = useState(() => {
+    const storedAddress = localStorage.getItem('shippingAddress');
+    return storedAddress ? JSON.parse(storedAddress) : {};
+  });
+
+  const [paymentMethod, setPaymentMethod] = useState(() => {
+    const storedMethod = localStorage.getItem('paymentMethod');
+    return storedMethod ? JSON.parse(storedMethod) : 'PayPal';
+  });
+
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
   }, [cartItems]);
+
+  useEffect(() => {
+    localStorage.setItem('shippingAddress', JSON.stringify(shippingAddress));
+  }, [shippingAddress]);
+
+  useEffect(() => {
+    localStorage.setItem('paymentMethod', JSON.stringify(paymentMethod));
+  }, [paymentMethod]);
 
   const addToCart = (product, qty) => {
     const existItem = cartItems.find((x) => x._id === product._id);
@@ -30,8 +48,32 @@ export const CartProvider = ({ children }) => {
     setCartItems(cartItems.filter((x) => x._id !== id));
   };
 
+  const saveShippingAddress = (data) => {
+    setShippingAddress(data);
+  };
+
+  const savePaymentMethod = (data) => {
+    setPaymentMethod(data);
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem('cartItems');
+  };
+
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart }}>
+    <CartContext.Provider 
+      value={{ 
+        cartItems, 
+        addToCart, 
+        removeFromCart, 
+        shippingAddress, 
+        saveShippingAddress,
+        paymentMethod,
+        savePaymentMethod,
+        clearCart
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
