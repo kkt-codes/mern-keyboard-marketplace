@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { CartContext } from '../context/CartContext';
 
 const ProductScreen = () => {
@@ -30,6 +31,7 @@ const ProductScreen = () => {
 
   const handleAddToCart = () => {
     addToCart(product, Number(qty));
+    toast.success('Added to cart!');
     navigate('/cart');
   };
 
