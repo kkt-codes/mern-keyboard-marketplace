@@ -1,12 +1,10 @@
 import { useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { CartContext } from '../context/CartContext';
-import { AuthContext } from '../context/AuthContext';
 
 const PlaceOrderScreen = () => {
   const { cartItems, shippingAddress, paymentMethod, clearCart } = useContext(CartContext);
-  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Calculate Prices
@@ -35,26 +33,18 @@ const PlaceOrderScreen = () => {
 
   const placeOrderHandler = async () => {
     try {
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
-        },
-      };
-
-      const { data } = await axios.post(
-        '/api/orders',
-        {
-          orderItems: cartItems,
-          shippingAddress,
-          paymentMethod,
-          itemsPrice,
-          shippingPrice,
-          taxPrice,
-          totalPrice,
-        },
-        config
-      );
+      const { data } = await api.post('/orders', {
+        // Order.orderItems.product is a required ObjectId ref, but cart items
+        // only carry the product under `_id` (spread from the product doc) —
+        // map it across or Mongoose validation rejects the whole order.
+        orderItems: cartItems.map((item) => ({ ...item, product: item._id })),
+        shippingAddress,
+        paymentMethod,
+        itemsPrice,
+        shippingPrice,
+        taxPrice,
+        totalPrice,
+      });
 
       clearCart();
       navigate(`/order/${data._id}`);

@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
 const OrderScreen = () => {
@@ -14,13 +14,7 @@ const OrderScreen = () => {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        };
-
-        const { data } = await axios.get(`/api/orders/${id}`, config);
+        const { data } = await api.get(`/orders/${id}`);
         setOrder(data);
         setLoading(false);
       } catch (err) {

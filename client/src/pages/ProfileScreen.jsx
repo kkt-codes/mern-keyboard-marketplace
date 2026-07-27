@@ -1,11 +1,11 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { FaTimes } from 'react-icons/fa';
 
 const ProfileScreen = () => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -15,6 +15,12 @@ const ProfileScreen = () => {
   const [errorOrders, setErrorOrders] = useState(null);
 
   useEffect(() => {
+    // Wait for AuthContext to finish reading localStorage before deciding
+    // the user is logged out — otherwise a hard refresh on this page always
+    // bounces to /login (user is briefly null on the first render) and then
+    // straight back to / once the user loads.
+    if (loading) return;
+
     if (!user) {
       navigate('/login');
     } else {
@@ -22,16 +28,11 @@ const ProfileScreen = () => {
       setEmail(user.email);
       fetchMyOrders();
     }
-  }, [navigate, user]);
+  }, [navigate, user, loading]);
 
   const fetchMyOrders = async () => {
     try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      };
-      const { data } = await axios.get('/api/orders/myorders', config);
+      const { data } = await api.get('/orders/myorders');
       setOrders(data);
       setLoadingOrders(false);
     } catch (err) {

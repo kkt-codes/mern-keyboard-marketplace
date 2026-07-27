@@ -37,11 +37,16 @@ const userSchema = new mongoose.Schema({
 /**
  * Pre-save middleware to hash the password before saving to database.
  * This runs automatically before .save() is called.
+ * Mongoose 9's middleware engine dropped the legacy `next` callback param —
+ * hooks are now plain async functions, and the save proceeds when the
+ * returned promise resolves (or aborts if it throws).
  */
-userSchema.pre('save', async function(next) {
-    // Only hash the password if it has been modified (or is new)
+userSchema.pre('save', async function() {
+    // Only hash the password if it has been modified (or is new).
+    // Skipping this check would re-hash the already-hashed password on every
+    // unrelated save (e.g. updating just the name) and permanently break login.
     if (!this.isModified('password')) {
-        next();
+        return;
     }
 
     const salt = await bcrypt.genSalt(10);

@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -16,7 +17,13 @@ const app = express();
 
 // Middleware
 app.use(express.json()); // Body parser for JSON data
-app.use(cors()); // Enable CORS for all routes
+app.use(cookieParser()); // Parses the Cookie header into req.cookies (needed for the refresh token)
+app.use(
+    cors({
+        origin: process.env.CLIENT_URL || 'http://localhost:5173',
+        credentials: true, // Allows the refreshToken cookie to be sent/received cross-origin
+    })
+);
 
 // Routes
 app.use('/api/auth', authRoutes);

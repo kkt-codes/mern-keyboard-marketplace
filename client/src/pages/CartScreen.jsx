@@ -8,7 +8,11 @@ const CartScreen = () => {
   const navigate = useNavigate();
 
   const checkoutHandler = () => {
-    navigate('/login?redirect=shipping');
+    // The redirect value must be an absolute path (leading slash) since
+    // LoginScreen passes it straight into navigate() after login, and a
+    // relative string there resolves against /login (e.g. "shipping" would
+    // become the dead route /login/shipping instead of /shipping).
+    navigate('/login?redirect=/shipping');
   };
 
   return (
