@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
 
-    // The "Why": api.js can't reach into this component's state, so when the
+    // api.js can't reach into this component's state, so when the
     // refresh token is invalid/expired it dispatches this event instead and
     // we react to it here to clear the logged-in user.
     const handleForcedLogout = () => setUser(null);
@@ -43,8 +43,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, password) => {
-    const { data } = await api.post('/auth/register', { name, email, password });
+  const register = async (name, email, password, role) => {
+    const { data } = await api.post('/auth/register', { name, email, password, role });
     setUser(data);
     setAccessToken(data.accessToken);
     localStorage.setItem('userInfo', JSON.stringify(data));

@@ -7,6 +7,7 @@ const RegisterScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('buyer');
   const [message, setMessage] = useState(null);
   const [error, setError] = useState('');
 
@@ -28,7 +29,7 @@ const RegisterScreen = () => {
       setMessage('Passwords do not match');
     } else {
       try {
-        await register(name, email, password);
+        await register(name, email, password, role);
       } catch (err) {
         setError(err.response?.data?.message || 'Registration failed');
       }
@@ -102,6 +103,38 @@ const RegisterScreen = () => {
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2">I want to</label>
+            <div className="flex items-center mb-2">
+              <input
+                type="radio"
+                id="roleBuyer"
+                name="role"
+                value="buyer"
+                checked={role === 'buyer'}
+                onChange={(e) => setRole(e.target.value)}
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+              />
+              <label htmlFor="roleBuyer" className="ml-3 block text-gray-700">
+                Buy keyboards
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="roleSeller"
+                name="role"
+                value="seller"
+                checked={role === 'seller'}
+                onChange={(e) => setRole(e.target.value)}
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+              />
+              <label htmlFor="roleSeller" className="ml-3 block text-gray-700">
+                Sell keyboards
+              </label>
+            </div>
           </div>
 
           <button

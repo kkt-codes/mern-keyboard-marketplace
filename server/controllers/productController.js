@@ -15,6 +15,20 @@ const getProducts = async (req, res) => {
 };
 
 /**
+ * @desc    Fetch products belonging to the logged-in seller
+ * @route   GET /api/products/myproducts
+ * @access  Private (Seller/Admin)
+ */
+const getMyProducts = async (req, res) => {
+    try {
+        const products = await Product.find({ user: req.user._id });
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
  * @desc    Fetch single product
  * @route   GET /api/products/:id
  * @access  Public
@@ -122,6 +136,7 @@ const deleteProduct = async (req, res) => {
 
 module.exports = {
     getProducts,
+    getMyProducts,
     getProductById,
     createProduct,
     updateProduct,

@@ -49,13 +49,22 @@ const Header = () => {
 
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 text-gray-800">
-                    <Link 
-                      to="/profile" 
+                    <Link
+                      to="/profile"
                       className="block px-4 py-2 hover:bg-gray-100"
                       onClick={() => setDropdownOpen(false)}
                     >
                       Profile
                     </Link>
+                    {(user.role === 'seller' || user.role === 'admin') && (
+                      <Link
+                        to="/seller/products"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        Seller Dashboard
+                      </Link>
+                    )}
                     <button
                       onClick={logoutHandler}
                       className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"

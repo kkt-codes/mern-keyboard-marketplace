@@ -27,7 +27,10 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const user = await User.create({ name, email, password, role });
+        // Self-registration may only grant 'buyer' or 'seller' — never trust
+        // a client-supplied role directly, or anyone could POST role: 'admin'.
+        const allowedRole = role === 'seller' ? 'seller' : 'buyer';
+        const user = await User.create({ name, email, password, role: allowedRole });
 
         if (user) {
             // The "Why": We now separate token generation.

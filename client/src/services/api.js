@@ -10,7 +10,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// The "Why": The access token lives in memory (not in this module's exports as
+// The access token lives in memory (not in this module's exports as
 // React state) so the request interceptor below can read the *latest* value
 // synchronously on every request, without every page having to pass it in.
 let accessToken = null;

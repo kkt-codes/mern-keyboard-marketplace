@@ -27,4 +27,17 @@ const protect = async (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+/**
+ * Middleware factory that restricts a route to specific user roles.
+ * Must run after `protect`, which populates `req.user`.
+ * @param {...string} roles - Roles allowed to access the route (e.g. 'seller', 'admin').
+ * @returns {Function} Express middleware.
+ */
+const authorize = (...roles) => (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+        return res.status(403).json({ message: 'Not authorized for this action' });
+    }
+    next();
+};
+
+module.exports = { protect, authorize };
