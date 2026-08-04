@@ -14,6 +14,10 @@ import OrderScreen from './pages/OrderScreen';
 import ProfileScreen from './pages/ProfileScreen';
 import SellerDashboardScreen from './pages/SellerDashboardScreen';
 import ProductEditScreen from './pages/ProductEditScreen';
+import AboutScreen from './pages/AboutScreen';
+import ContactScreen from './pages/ContactScreen';
+import FaqScreen from './pages/FaqScreen';
+import TermsPrivacyScreen from './pages/TermsPrivacyScreen';
 
 function App() {
   return (
@@ -36,6 +40,10 @@ function App() {
             <Route path="/seller/products" element={<SellerDashboardScreen />} />
             <Route path="/seller/product/new" element={<ProductEditScreen />} />
             <Route path="/seller/product/:id/edit" element={<ProductEditScreen />} />
+            <Route path="/about" element={<AboutScreen />} />
+            <Route path="/contact" element={<ContactScreen />} />
+            <Route path="/faq" element={<FaqScreen />} />
+            <Route path="/terms" element={<TermsPrivacyScreen />} />
           </Routes>
         </main>
         <Footer />

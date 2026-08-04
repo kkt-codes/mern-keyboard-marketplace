@@ -5,13 +5,15 @@
       "name": "server",
       "runtimeExecutable": "bash",
       "runtimeArgs": ["-c", "cd server && npm run dev"],
-      "port": 5000
+      "port": 5000,
+      "autoPort": true
     },
     {
       "name": "client",
       "runtimeExecutable": "bash",
       "runtimeArgs": ["-c", "cd client && npm run dev"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }

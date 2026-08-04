@@ -14,8 +14,17 @@ const { protect, authorize } = require('../middleware/authMiddleware');
  * @swagger
  * /products:
  *   get:
- *     summary: List all products
+ *     summary: List products, optionally filtered by keyword and/or category
  *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: keyword
+ *         schema: { type: string }
+ *         description: Case-insensitive substring match against product name.
+ *       - in: query
+ *         name: category
+ *         schema: { type: string }
+ *         description: Case-insensitive exact match against product category.
  *     responses:
  *       200:
  *         description: All products in the catalog.

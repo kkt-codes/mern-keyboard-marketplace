@@ -1,13 +1,32 @@
 const Product = require('../models/Product');
 
 /**
- * @desc    Fetch all products
- * @route   GET /api/products
+ * Escapes regex metacharacters in user-supplied search input.
+ * Without this, a keyword like `.*` or `(a+)+` passed straight into
+ * `$regex` could match everything or cause catastrophic backtracking (ReDoS).
+ * @param {string} text
+ * @returns {string}
+ */
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * @desc    Fetch all products, optionally filtered by keyword (name) and/or category
+ * @route   GET /api/products?keyword=&category=
  * @access  Public
  */
 const getProducts = async (req, res) => {
     try {
-        const products = await Product.find({});
+        const filter = {};
+
+        if (req.query.keyword) {
+            filter.name = { $regex: escapeRegex(req.query.keyword), $options: 'i' };
+        }
+
+        if (req.query.category) {
+            filter.category = { $regex: `^${escapeRegex(req.query.category)}$`, $options: 'i' };
+        }
+
+        const products = await Product.find(filter);
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: error.message });
