@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 
 /**
  * @desc    Create new order
@@ -107,9 +108,51 @@ const getMyOrders = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Get orders containing any of the logged-in seller's products
+ * @route   GET /api/orders/sellerorders
+ * @access  Private (Seller/Admin)
+ * @returns {object[]} Orders trimmed to just this seller's line items, plus
+ *          a computed `sellerTotal` (revenue from just those items).
+ */
+const getSellerOrders = async (req, res) => {
+    try {
+        const myProducts = await Product.find({ user: req.user._id }).select('_id');
+        const myProductIds = myProducts.map((p) => p._id.toString());
+
+        const orders = await Order.find({ 'orderItems.product': { $in: myProductIds } })
+            .populate('user', 'name email')
+            .sort('-createdAt');
+
+        const sellerOrders = orders.map((order) => {
+            const sellerItems = order.orderItems.filter((item) =>
+                myProductIds.includes(item.product.toString())
+            );
+            const sellerTotal = sellerItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+            return {
+                _id: order._id,
+                user: order.user,
+                orderItems: sellerItems,
+                sellerTotal,
+                isPaid: order.isPaid,
+                paidAt: order.paidAt,
+                isDelivered: order.isDelivered,
+                deliveredAt: order.deliveredAt,
+                createdAt: order.createdAt,
+            };
+        });
+
+        res.json(sellerOrders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     addOrderItems,
     getOrderById,
     updateOrderToPaid,
-    getMyOrders
+    getMyOrders,
+    getSellerOrders
 };

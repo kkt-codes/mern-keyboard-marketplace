@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { CartContext } from '../context/CartContext';
+import BookmarkButton from '../components/BookmarkButton';
 
 const ProductScreen = () => {
   const { id } = useParams();
@@ -48,11 +49,14 @@ const ProductScreen = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product Image */}
         <div className="flex justify-center">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full max-w-md rounded-lg shadow-lg object-cover"
-          />
+          <div className="relative w-full max-w-md">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full rounded-lg shadow-lg object-cover"
+            />
+            <BookmarkButton product={product} className="absolute top-2 right-2" />
+          </div>
         </div>
 
         {/* Product Details */}

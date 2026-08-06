@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+/*
+ * Tailwind v4 redefined `.container` as just `width: 100%` with no
+ * responsive max-width, unlike v3. This restores centered content with
+ * margins on desktop instead of stretching edge-to-edge, capping at 1280px
+ * (xl) permanently rather than growing further at 2xl — since min-width
+ * media queries stay in effect at any wider viewport, omitting a 2xl rule
+ * means 1280px is the final cap on every screen size beyond it. Padding is
+ * intentionally left out here — every usage already pairs `container` with
+ * an explicit `px-4`.
+ */
+@utility container {
+  margin-inline: auto;
+
+  @media (width >= theme(--breakpoint-sm)) {
+    max-width: theme(--breakpoint-sm);
+  }
+  @media (width >= theme(--breakpoint-md)) {
+    max-width: theme(--breakpoint-md);
+  }
+  @media (width >= theme(--breakpoint-lg)) {
+    max-width: theme(--breakpoint-lg);
+  }
+  @media (width >= theme(--breakpoint-xl)) {
+    max-width: theme(--breakpoint-xl);
+  }
+}
+
 @layer base {
   body {
     @apply bg-gray-100 text-gray-800 font-sans;
@@ -8,3 +35,7 @@
     @apply font-bold;
   }
 }
+
+/*@theme {*/
+/*  --breakpoint-xl: 90rem; !* hardcoded px instead of the default 1280px *!*/
+/*}*/

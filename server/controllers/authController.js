@@ -144,10 +144,52 @@ const getUserProfile = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                createdAt: user.createdAt,
             });
         } else {
             res.status(404).json({ message: 'User not found' });
         }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * @desc    Update the logged-in user's name/email
+ * @route   PUT /api/auth/profile
+ * @access  Private
+ */
+const updateUserProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const { name, email } = req.body;
+
+        if (email && email !== user.email) {
+            const emailTaken = await User.findOne({ email });
+            if (emailTaken) {
+                return res.status(400).json({ message: 'Email already in use' });
+            }
+            user.email = email;
+        }
+
+        if (name) {
+            user.name = name;
+        }
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            createdAt: updatedUser.createdAt,
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -159,4 +201,5 @@ module.exports = {
     logoutUser,
     refreshAccessToken,
     getUserProfile,
+    updateUserProfile,
 };

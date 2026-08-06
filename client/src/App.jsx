@@ -12,7 +12,7 @@ import PaymentScreen from './pages/PaymentScreen';
 import PlaceOrderScreen from './pages/PlaceOrderScreen';
 import OrderScreen from './pages/OrderScreen';
 import ProfileScreen from './pages/ProfileScreen';
-import SellerDashboardScreen from './pages/SellerDashboardScreen';
+import DashboardScreen from './pages/DashboardScreen';
 import ProductEditScreen from './pages/ProductEditScreen';
 import AboutScreen from './pages/AboutScreen';
 import ContactScreen from './pages/ContactScreen';
@@ -37,7 +37,7 @@ function App() {
             <Route path="/placeorder" element={<PlaceOrderScreen />} />
             <Route path="/order/:id" element={<OrderScreen />} />
             <Route path="/profile" element={<ProfileScreen />} />
-            <Route path="/seller/products" element={<SellerDashboardScreen />} />
+            <Route path="/dashboard" element={<DashboardScreen />} />
             <Route path="/seller/product/new" element={<ProductEditScreen />} />
             <Route path="/seller/product/:id/edit" element={<ProductEditScreen />} />
             <Route path="/about" element={<AboutScreen />} />

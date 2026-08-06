@@ -3,6 +3,8 @@ const router = express.Router();
 const {
     getProducts,
     getMyProducts,
+    getMyBookmarks,
+    toggleBookmark,
     getProductById,
     createProduct,
     updateProduct,
@@ -85,6 +87,25 @@ router.route('/myproducts').get(protect, authorize('seller', 'admin'), getMyProd
 
 /**
  * @swagger
+ * /products/bookmarks/mine:
+ *   get:
+ *     summary: List the logged-in user's bookmarked products
+ *     tags: [Products]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Full product docs for everything the user has bookmarked.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: '#/components/schemas/Product' }
+ */
+// Must come before /:id for the same reason as /myproducts above.
+router.route('/bookmarks/mine').get(protect, getMyBookmarks);
+
+/**
+ * @swagger
  * /products/{id}:
  *   get:
  *     summary: Get a single product
@@ -164,5 +185,34 @@ router.route('/:id')
     .get(getProductById)
     .put(protect, authorize('seller', 'admin'), updateProduct)
     .delete(protect, authorize('seller', 'admin'), deleteProduct);
+
+/**
+ * @swagger
+ * /products/{id}/bookmark:
+ *   post:
+ *     summary: Toggle a bookmark on/off for the current user
+ *     tags: [Products]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: New bookmark state.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 bookmarked: { type: boolean }
+ *       404:
+ *         description: Product not found.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
+router.route('/:id/bookmark').post(protect, toggleBookmark);
 
 module.exports = router;

@@ -30,15 +30,14 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('paymentMethod', JSON.stringify(paymentMethod));
   }, [paymentMethod]);
 
+  // `qty` is always the item's intended new total quantity, not a delta —
+  // every caller (ProductScreen, CartScreen's stepper) already computes the
+  // final number before calling this.
   const addToCart = (product, qty) => {
     const existItem = cartItems.find((x) => x._id === product._id);
 
     if (existItem) {
-      setCartItems(
-        cartItems.map((x) =>
-          x._id === existItem._id ? { ...existItem, qty: existItem.qty + qty } : x
-        )
-      );
+      setCartItems(cartItems.map((x) => (x._id === existItem._id ? { ...existItem, qty } : x)));
     } else {
       setCartItems([...cartItems, { ...product, qty }]);
     }

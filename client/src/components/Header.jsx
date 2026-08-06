@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaUser, FaSignOutAlt, FaSearch, FaChevronDown } from 'react-icons/fa';
-import { useContext, useState } from 'react';
+import { useContext, useState, useRef } from 'react';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
+import useClickOutside from '../hooks/useClickOutside';
 
 const Header = () => {
   const { cartItems } = useContext(CartContext);
@@ -11,6 +12,11 @@ const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [infoDropdownOpen, setInfoDropdownOpen] = useState(false);
   const [keyword, setKeyword] = useState('');
+
+  const userMenuRef = useRef(null);
+  const infoMenuRef = useRef(null);
+  useClickOutside(userMenuRef, () => setDropdownOpen(false));
+  useClickOutside(infoMenuRef, () => setInfoDropdownOpen(false));
 
   const logoutHandler = () => {
     logout();
@@ -75,7 +81,7 @@ const Header = () => {
               </Link>
             </li>
 
-            <li className="relative">
+            <li className="relative" ref={infoMenuRef}>
               <button
                 onClick={() => setInfoDropdownOpen(!infoDropdownOpen)}
                 className="flex items-center hover:text-gray-300 transition focus:outline-none"
@@ -102,7 +108,7 @@ const Header = () => {
             </li>
 
             {user ? (
-              <li className="relative">
+              <li className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center hover:text-gray-300 transition focus:outline-none"
@@ -113,21 +119,19 @@ const Header = () => {
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 text-gray-800">
                     <Link
+                      to="/dashboard"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
                       to="/profile"
                       className="block px-4 py-2 hover:bg-gray-100"
                       onClick={() => setDropdownOpen(false)}
                     >
                       Profile
                     </Link>
-                    {(user.role === 'seller' || user.role === 'admin') && (
-                      <Link
-                        to="/seller/products"
-                        className="block px-4 py-2 hover:bg-gray-100"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        Seller Dashboard
-                      </Link>
-                    )}
                     <button
                       onClick={logoutHandler}
                       className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"

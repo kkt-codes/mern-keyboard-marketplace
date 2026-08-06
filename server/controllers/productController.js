@@ -1,4 +1,5 @@
 const Product = require('../models/Product');
+const User = require('../models/User');
 
 /**
  * Escapes regex metacharacters in user-supplied search input.
@@ -42,6 +43,51 @@ const getMyProducts = async (req, res) => {
     try {
         const products = await Product.find({ user: req.user._id });
         res.json(products);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * @desc    Fetch the logged-in user's bookmarked products
+ * @route   GET /api/products/bookmarks/mine
+ * @access  Private
+ */
+const getMyBookmarks = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).populate('bookmarks');
+        res.json(user.bookmarks);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * @desc    Toggle a bookmark on/off for the logged-in user
+ * @route   POST /api/products/:id/bookmark
+ * @access  Private
+ */
+const toggleBookmark = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        const user = await User.findById(req.user._id);
+        const index = user.bookmarks.findIndex((id) => id.toString() === req.params.id);
+
+        let bookmarked;
+        if (index === -1) {
+            user.bookmarks.push(product._id);
+            bookmarked = true;
+        } else {
+            user.bookmarks.splice(index, 1);
+            bookmarked = false;
+        }
+
+        await user.save();
+        res.json({ bookmarked });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -156,6 +202,8 @@ const deleteProduct = async (req, res) => {
 module.exports = {
     getProducts,
     getMyProducts,
+    getMyBookmarks,
+    toggleBookmark,
     getProductById,
     createProduct,
     updateProduct,

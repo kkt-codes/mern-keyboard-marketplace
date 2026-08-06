@@ -38,6 +38,7 @@ const swaggerDefinition = {
                     name: { type: 'string', example: 'Jane Seller' },
                     email: { type: 'string', format: 'email', example: 'jane@example.com' },
                     role: { type: 'string', enum: ['buyer', 'seller', 'admin'], example: 'seller' },
+                    createdAt: { type: 'string', format: 'date-time' },
                 },
             },
             AuthResponse: {

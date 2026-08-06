@@ -50,8 +50,19 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('userInfo', JSON.stringify(data));
   };
 
+  // Merges fresh fields (e.g. after a profile edit) into the cached user
+  // without touching the accessToken, so the header/dashboard update
+  // immediately without forcing a re-login.
+  const updateUser = (fields) => {
+    setUser((prev) => {
+      const next = { ...prev, ...fields };
+      localStorage.setItem('userInfo', JSON.stringify(next));
+      return next;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

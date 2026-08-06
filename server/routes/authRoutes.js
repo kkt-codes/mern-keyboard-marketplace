@@ -5,7 +5,8 @@ const {
     loginUser,
     logoutUser,
     refreshAccessToken,
-    getUserProfile
+    getUserProfile,
+    updateUserProfile
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -130,5 +131,35 @@ router.post('/refresh', refreshAccessToken);
  *             schema: { $ref: '#/components/schemas/Error' }
  */
 router.get('/profile', protect, getUserProfile);
+
+/**
+ * @swagger
+ * /auth/profile:
+ *   put:
+ *     summary: Update the logged-in user's name/email
+ *     tags: [Auth]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               email: { type: string, format: email }
+ *     responses:
+ *       200:
+ *         description: The updated user.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/User' }
+ *       400:
+ *         description: Email already in use.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
+router.put('/profile', protect, updateUserProfile);
 
 module.exports = router;

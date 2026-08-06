@@ -1,142 +1,130 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
-import { FaTimes } from 'react-icons/fa';
 
+const ROLE_STYLES = {
+  buyer: 'bg-blue-100 text-blue-700',
+  seller: 'bg-green-100 text-green-700',
+  admin: 'bg-purple-100 text-purple-700',
+};
+
+/**
+ * Pure identity page: view/edit name & email, see role and member-since date.
+ * Order history and other account activity live on /dashboard instead.
+ */
 const ProfileScreen = () => {
-  const { user, loading } = useContext(AuthContext);
+  const { user, loading, updateUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const [profile, setProfile] = useState(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [orders, setOrders] = useState([]);
-  const [loadingOrders, setLoadingOrders] = useState(true);
-  const [errorOrders, setErrorOrders] = useState(null);
+  const [fetching, setFetching] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Wait for AuthContext to finish reading localStorage before deciding
-    // the user is logged out — otherwise a hard refresh on this page always
-    // bounces to /login (user is briefly null on the first render) and then
-    // straight back to / once the user loads.
     if (loading) return;
 
     if (!user) {
       navigate('/login');
-    } else {
-      setName(user.name);
-      setEmail(user.email);
-      fetchMyOrders();
+      return;
     }
+
+    const fetchProfile = async () => {
+      try {
+        const { data } = await api.get('/auth/profile');
+        setProfile(data);
+        setName(data.name);
+        setEmail(data.email);
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Failed to load profile');
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    fetchProfile();
   }, [navigate, user, loading]);
 
-  const fetchMyOrders = async () => {
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+
     try {
-      const { data } = await api.get('/orders/myorders');
-      setOrders(data);
-      setLoadingOrders(false);
+      const { data } = await api.put('/auth/profile', { name, email });
+      setProfile(data);
+      updateUser({ name: data.name, email: data.email });
+      toast.success('Profile updated');
     } catch (err) {
-      setErrorOrders(err.response?.data?.message || err.message);
-      setLoadingOrders(false);
+      toast.error(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
     }
   };
 
+  if (fetching || !profile) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
+
   return (
-    <div className="container mx-auto mt-10">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* User Profile Column */}
-        <div className="md:col-span-1">
-          <h2 className="text-2xl font-bold mb-4">User Profile</h2>
-          <form>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">Name</label>
-              <input
-                type="text"
-                value={name}
-                disabled
-                className="w-full px-3 py-2 border rounded-lg bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
-              <input
-                type="email"
-                value={email}
-                disabled
-                className="w-full px-3 py-2 border rounded-lg bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-            {/* Update logic can be added here later */}
-          </form>
+    <div className="flex justify-center mt-10">
+      <div className="w-full max-w-lg bg-white p-8 rounded-lg shadow-md">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">My Profile</h1>
+          <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${ROLE_STYLES[profile.role]}`}>
+            {profile.role}
+          </span>
         </div>
 
-        {/* My Orders Column */}
-        <div className="md:col-span-3">
-          <h2 className="text-2xl font-bold mb-4">My Orders</h2>
-          {loadingOrders ? (
-            <p>Loading orders...</p>
-          ) : errorOrders ? (
-            <div className="bg-red-100 text-red-700 p-3 rounded">{errorOrders}</div>
-          ) : orders.length === 0 ? (
-            <div className="bg-blue-100 text-blue-700 p-3 rounded">
-              You have no orders. <Link to="/" className="underline font-bold">Start Shopping</Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                  <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                    <th className="py-3 px-6 text-left">ID</th>
-                    <th className="py-3 px-6 text-left">Date</th>
-                    <th className="py-3 px-6 text-left">Total</th>
-                    <th className="py-3 px-6 text-center">Paid</th>
-                    <th className="py-3 px-6 text-center">Delivered</th>
-                    <th className="py-3 px-6 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-gray-600 text-sm font-light">
-                  {orders.map((order) => (
-                    <tr key={order._id} className="border-b border-gray-200 hover:bg-gray-50">
-                      <td className="py-3 px-6 text-left whitespace-nowrap font-medium">{order._id}</td>
-                      <td className="py-3 px-6 text-left">{order.createdAt.substring(0, 10)}</td>
-                      <td className="py-3 px-6 text-left">${order.totalPrice.toFixed(2)}</td>
-                      <td className="py-3 px-6 text-center">
-                        {order.isPaid ? (
-                          <span className="bg-green-200 text-green-600 py-1 px-3 rounded-full text-xs">
-                            {order.paidAt.substring(0, 10)}
-                          </span>
-                        ) : (
-                          <span className="bg-red-200 text-red-600 py-1 px-3 rounded-full text-xs">
-                            <FaTimes />
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-6 text-center">
-                        {order.isDelivered ? (
-                          <span className="bg-green-200 text-green-600 py-1 px-3 rounded-full text-xs">
-                            {order.deliveredAt.substring(0, 10)}
-                          </span>
-                        ) : (
-                          <span className="bg-red-200 text-red-600 py-1 px-3 rounded-full text-xs">
-                            <FaTimes />
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-6 text-center">
-                        <Link
-                          to={`/order/${order._id}`}
-                          className="bg-indigo-500 text-white py-1 px-3 rounded text-xs hover:bg-indigo-600 transition"
-                        >
-                          Details
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <p className="text-sm text-gray-500 mb-6">
+          Member since {new Date(profile.createdAt).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </p>
+
+        <form onSubmit={submitHandler}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+              Email Address
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300 disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </form>
+
+        <Link to="/dashboard" className="block text-center text-sm text-indigo-600 hover:underline mt-6">
+          Go to Dashboard &rarr;
+        </Link>
       </div>
     </div>
   );

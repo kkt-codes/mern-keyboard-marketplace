@@ -62,11 +62,11 @@ const HomeScreen = () => {
       {!isFiltered && (
         <>
           {/* Hero */}
-          <section className="-mt-8 mb-12 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-b-lg">
+          <section className="mb-12 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-lg">
             <div className="container mx-auto px-4 py-20 text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-4">Built for typists who care.</h1>
               <p className="text-lg text-gray-300 mb-8 max-w-xl mx-auto">
-                Mechanical keyboards from independent sellers — browse builds, compare specs, and order
+                Mechanical keyboards from independent sellers - browse builds, compare specs, and order
                 straight from the people who make them.
               </p>
               <a

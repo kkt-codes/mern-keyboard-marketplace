@@ -70,7 +70,7 @@ const ProductEditScreen = () => {
         await api.post('/products', payload);
         toast.success('Product created');
       }
-      navigate('/seller/products');
+      navigate('/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save product');
     } finally {
@@ -84,8 +84,8 @@ const ProductEditScreen = () => {
   return (
     <div className="flex justify-center mt-10">
       <div className="w-full max-w-lg bg-white p-8 rounded-lg shadow-md">
-        <Link to="/seller/products" className="inline-block mb-6 text-indigo-600 hover:underline">
-          &larr; Back to My Products
+        <Link to="/dashboard" className="inline-block mb-6 text-indigo-600 hover:underline">
+          &larr; Back to Dashboard
         </Link>
 
         <h1 className="text-2xl font-bold mb-6">{isEditMode ? 'Edit Product' : 'Add Product'}</h1>

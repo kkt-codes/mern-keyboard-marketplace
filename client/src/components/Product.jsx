@@ -1,15 +1,19 @@
 import { Link } from 'react-router-dom';
+import BookmarkButton from './BookmarkButton';
 
 const Product = ({ product }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
-      <Link to={`/product/${product._id}`}>
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-48 object-cover object-center"
-        />
-      </Link>
+      <div className="relative">
+        <Link to={`/product/${product._id}`}>
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-48 object-cover object-center"
+          />
+        </Link>
+        <BookmarkButton product={product} className="absolute top-2 right-2" />
+      </div>
 
       <div className="p-4">
         <Link to={`/product/${product._id}`}>

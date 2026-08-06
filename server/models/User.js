@@ -29,7 +29,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['buyer', 'seller', 'admin'],
         default: 'buyer'
-    }
+    },
+    bookmarks: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product'
+        }
+    ]
 }, {
     timestamps: true // Automatically adds createdAt and updatedAt fields
 });
