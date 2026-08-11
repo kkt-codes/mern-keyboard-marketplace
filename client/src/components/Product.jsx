@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import BookmarkButton from './BookmarkButton';
+import Rating from './Rating';
 
 const Product = ({ product }) => {
   return (
@@ -22,10 +23,8 @@ const Product = ({ product }) => {
           </h2>
         </Link>
 
-        <div className="flex items-center mt-2 mb-4">
-            {/* Placeholder for Rating component later */}
-            <span className="text-yellow-500 text-sm">★★★★☆</span>
-            <span className="text-gray-600 text-xs ml-1">({product.numReviews || 0} reviews)</span>
+        <div className="mt-2 mb-4">
+          <Rating value={product.rating} text={`(${product.numReviews || 0} reviews)`} size="text-sm" />
         </div>
 
         <div className="flex justify-between items-center">

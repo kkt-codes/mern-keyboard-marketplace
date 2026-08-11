@@ -7,6 +7,7 @@ const {
     toggleBookmark,
     getProductById,
     createProduct,
+    createProductReview,
     updateProduct,
     deleteProduct
 } = require('../controllers/productController');
@@ -214,5 +215,52 @@ router.route('/:id')
  *             schema: { $ref: '#/components/schemas/Error' }
  */
 router.route('/:id/bookmark').post(protect, toggleBookmark);
+
+/**
+ * @swagger
+ * /products/{id}/reviews:
+ *   post:
+ *     summary: Add a review to a product
+ *     description: Only allowed if the logged-in user has a paid order containing this product, and hasn't already reviewed it.
+ *     tags: [Products]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [rating, comment]
+ *             properties:
+ *               rating: { type: integer, minimum: 1, maximum: 5 }
+ *               comment: { type: string }
+ *     responses:
+ *       201:
+ *         description: The updated product, including the new review.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Product' }
+ *       400:
+ *         description: Already reviewed this product.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       403:
+ *         description: Hasn't purchased this product.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Product not found.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
+router.route('/:id/reviews').post(protect, createProductReview);
 
 module.exports = router;

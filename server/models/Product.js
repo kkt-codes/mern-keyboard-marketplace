@@ -1,6 +1,36 @@
 const mongoose = require('mongoose');
 
 /**
+ * Review Schema
+ * Embedded in Product — one entry per user who has reviewed it.
+ * `name` is denormalized from the reviewing user at write time so the
+ * product detail page doesn't need a separate populate/lookup to render it.
+ */
+const reviewSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
+    },
+    name: {
+        type: String,
+        required: true
+    },
+    rating: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 5
+    },
+    comment: {
+        type: String,
+        required: [true, 'Please add a comment']
+    }
+}, {
+    timestamps: true
+});
+
+/**
  * Product Schema
  * Defines the structure for Product documents.
  */
@@ -38,6 +68,17 @@ const productSchema = new mongoose.Schema({
     countInStock: {
         type: Number,
         required: [true, 'Please add stock count'],
+        default: 0
+    },
+    reviews: [reviewSchema],
+    rating: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    numReviews: {
+        type: Number,
+        required: true,
         default: 0
     }
 }, {

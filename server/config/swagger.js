@@ -64,8 +64,22 @@ const swaggerDefinition = {
                     description: { type: 'string' },
                     price: { type: 'number', example: 199.99 },
                     countInStock: { type: 'integer', example: 10 },
+                    reviews: { type: 'array', items: { $ref: '#/components/schemas/Review' } },
+                    rating: { type: 'number', example: 4.5, description: 'Average of all review ratings.' },
+                    numReviews: { type: 'integer', example: 2 },
                     createdAt: { type: 'string', format: 'date-time' },
                     updatedAt: { type: 'string', format: 'date-time' },
+                },
+            },
+            Review: {
+                type: 'object',
+                properties: {
+                    _id: { type: 'string' },
+                    user: { type: 'string', description: 'ObjectId of the reviewing user.' },
+                    name: { type: 'string', example: 'Jane Buyer' },
+                    rating: { type: 'integer', minimum: 1, maximum: 5 },
+                    comment: { type: 'string' },
+                    createdAt: { type: 'string', format: 'date-time' },
                 },
             },
             ProductInput: {

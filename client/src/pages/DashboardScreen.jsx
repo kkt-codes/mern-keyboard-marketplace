@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FaBoxOpen, FaDollarSign, FaShoppingBag, FaExclamationTriangle, FaHeart, FaTimes } from 'react-icons/fa';
+import { FaBoxOpen, FaDollarSign, FaShoppingBag, FaExclamationTriangle, FaBookmark, FaTimes } from 'react-icons/fa';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { BookmarkContext } from '../context/BookmarkContext';
@@ -108,7 +108,7 @@ const DashboardScreen = () => {
           <>
             <StatCard icon={FaShoppingBag} label="Orders" value={totalOrders} />
             <StatCard icon={FaDollarSign} label="Total Spent" value={`$${totalSpent.toFixed(2)}`} />
-            <StatCard icon={FaHeart} label="Bookmarks" value={bookmarkedProducts.length} />
+            <StatCard icon={FaBookmark} label="Bookmarks" value={bookmarkedProducts.length} />
           </>
         )}
       </div>
@@ -305,7 +305,7 @@ const DashboardScreen = () => {
         <h2 className="text-xl font-bold mb-4">Bookmarked Products</h2>
         {bookmarkedProducts.length === 0 ? (
           <div className="bg-blue-100 text-blue-700 p-3 rounded">
-            No bookmarks yet. Tap the heart icon on any product to save it here.
+            No bookmarks yet. Tap the bookmark icon on any product to save it here.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

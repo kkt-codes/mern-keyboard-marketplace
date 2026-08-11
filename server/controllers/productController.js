@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const User = require('../models/User');
+const Order = require('../models/Order');
 
 /**
  * Escapes regex metacharacters in user-supplied search input.
@@ -113,6 +114,56 @@ const getProductById = async (req, res) => {
 };
 
 /**
+ * @desc    Add a review to a product
+ * @route   POST /api/products/:id/reviews
+ * @access  Private (must have a paid order containing this product)
+ */
+const createProductReview = async (req, res) => {
+    try {
+        const { rating, comment } = req.body;
+
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        const alreadyReviewed = product.reviews.some(
+            (review) => review.user.toString() === req.user._id.toString()
+        );
+        if (alreadyReviewed) {
+            return res.status(400).json({ message: 'You have already reviewed this product' });
+        }
+
+        // Only someone with a paid order containing this product may review it.
+        const hasPurchased = await Order.exists({
+            user: req.user._id,
+            isPaid: true,
+            'orderItems.product': product._id
+        });
+        if (!hasPurchased) {
+            return res.status(403).json({ message: 'You can only review products you have purchased' });
+        }
+
+        const review = {
+            user: req.user._id,
+            name: req.user.name,
+            rating: Number(rating),
+            comment
+        };
+
+        product.reviews.push(review);
+        product.numReviews = product.reviews.length;
+        product.rating =
+            product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length;
+
+        await product.save();
+        res.status(201).json(product);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
  * @desc    Create a product
  * @route   POST /api/products
  * @access  Private (Seller/Admin)
@@ -206,6 +257,7 @@ module.exports = {
     toggleBookmark,
     getProductById,
     createProduct,
+    createProductReview,
     updateProduct,
     deleteProduct
 };
