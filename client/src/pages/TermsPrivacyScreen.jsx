@@ -11,8 +11,8 @@ const TermsPrivacyScreen = () => {
             marketplace only for lawful purchases and listings.
           </p>
           <p className="text-gray-700 mb-3 leading-relaxed">
-            Sellers are responsible for the accuracy of their own product listings — pricing,
-            availability, and description — and for fulfilling orders placed against their products.
+            Sellers are responsible for the accuracy of their own product listings like pricing,
+            availability, and description also for fulfilling orders placed against their products.
           </p>
           <p className="text-gray-700 leading-relaxed">
             We reserve the right to remove listings or suspend accounts that violate these terms.
@@ -28,7 +28,7 @@ const TermsPrivacyScreen = () => {
           </p>
           <p className="text-gray-700 leading-relaxed">
             We don't sell your personal information to third parties. Data is used only to operate the
-            marketplace — processing orders, authenticating your account, and displaying your order
+            marketplace - processing orders, authenticating your account, and displaying your order
             history back to you.
           </p>
         </section>

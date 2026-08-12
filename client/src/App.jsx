@@ -12,12 +12,17 @@ import PaymentScreen from './pages/PaymentScreen';
 import PlaceOrderScreen from './pages/PlaceOrderScreen';
 import OrderScreen from './pages/OrderScreen';
 import ProfileScreen from './pages/ProfileScreen';
-import DashboardScreen from './pages/DashboardScreen';
 import ProductEditScreen from './pages/ProductEditScreen';
 import AboutScreen from './pages/AboutScreen';
 import ContactScreen from './pages/ContactScreen';
 import FaqScreen from './pages/FaqScreen';
 import TermsPrivacyScreen from './pages/TermsPrivacyScreen';
+import DashboardLayout from './layouts/DashboardLayout';
+import DashboardOverview from './pages/dashboard/DashboardOverview';
+import MyOrdersPage from './pages/dashboard/MyOrdersPage';
+import MyProductsPage from './pages/dashboard/MyProductsPage';
+import OrdersReceivedPage from './pages/dashboard/OrdersReceivedPage';
+import BookmarksPage from './pages/dashboard/BookmarksPage';
 
 function App() {
   return (
@@ -37,7 +42,13 @@ function App() {
             <Route path="/placeorder" element={<PlaceOrderScreen />} />
             <Route path="/order/:id" element={<OrderScreen />} />
             <Route path="/profile" element={<ProfileScreen />} />
-            <Route path="/dashboard" element={<DashboardScreen />} />
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardOverview />} />
+              <Route path="orders" element={<MyOrdersPage />} />
+              <Route path="bookmarks" element={<BookmarksPage />} />
+              <Route path="products" element={<MyProductsPage />} />
+              <Route path="orders-received" element={<OrdersReceivedPage />} />
+            </Route>
             <Route path="/seller/product/new" element={<ProductEditScreen />} />
             <Route path="/seller/product/:id/edit" element={<ProductEditScreen />} />
             <Route path="/about" element={<AboutScreen />} />

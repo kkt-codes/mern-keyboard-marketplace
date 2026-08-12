@@ -101,7 +101,7 @@ const updateOrderToPaid = async (req, res) => {
  */
 const getMyOrders = async (req, res) => {
     try {
-        const orders = await Order.find({ user: req.user._id });
+        const orders = await Order.find({ user: req.user._id }).sort('-createdAt');
         res.json(orders);
     } catch (error) {
         res.status(500).json({ message: error.message });
