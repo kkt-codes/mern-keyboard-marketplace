@@ -1,5 +1,11 @@
-const express = require('express');
+// dotenv must load before any other local module is required — some
+// modules (e.g. config/cloudinary.js) read process.env at module-load
+// time rather than inside a function, so if this ran later those reads
+// would see undefined values that never get refreshed afterward.
 const dotenv = require('dotenv');
+dotenv.config();
+
+const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const swaggerUi = require('swagger-ui-express');
@@ -8,9 +14,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
-
-// Load environment variables
-dotenv.config();
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // Connect to Database
 connectDB();
@@ -31,6 +35,7 @@ app.use(
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // API docs, generated from the @swagger JSDoc blocks in ./routes/*.js
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

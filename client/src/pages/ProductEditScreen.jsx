@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { FaTimes } from 'react-icons/fa';
 import api from '../services/api';
 
 /**
@@ -24,6 +25,8 @@ const ProductEditScreen = () => {
   const [loading, setLoading] = useState(isEditMode);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -48,8 +51,45 @@ const ProductEditScreen = () => {
     fetchProduct();
   }, [id, isEditMode]);
 
+  const imageChangeHandler = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    setUploading(true);
+    try {
+      // No explicit Content-Type here — axios/the browser must generate it
+      // themselves so it includes the multipart boundary; setting it
+      // manually would produce a boundary-less header the server can't parse.
+      const { data } = await api.post('/upload', formData);
+      setImage(data.url);
+      toast.success('Image uploaded');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Image upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImageHandler = () => {
+    setImage('');
+    // Reset the input's value too, or re-selecting the exact same file
+    // afterward wouldn't fire a new onChange event.
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    if (!image) {
+      toast.error('Please upload a product image');
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
@@ -107,17 +147,32 @@ const ProductEditScreen = () => {
 
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image">
-              Image URL
+              Product Image
             </label>
+
+            {image && (
+              <div className="relative mb-2">
+                <img src={image} alt="Product preview" className="w-full h-40 object-cover rounded-lg" />
+                <button
+                  type="button"
+                  onClick={removeImageHandler}
+                  aria-label="Remove image"
+                  className="absolute top-2 right-2 bg-white/90 backdrop-blur rounded-full p-2 shadow hover:scale-110 transition"
+                >
+                  <FaTimes className="text-gray-600" />
+                </button>
+              </div>
+            )}
+
             <input
-              type="text"
+              type="file"
               id="image"
-              placeholder="https://..."
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
+              ref={fileInputRef}
+              accept="image/jpeg,image/png,image/webp"
+              onChange={imageChangeHandler}
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              required
             />
+            {uploading && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
           </div>
 
           <div className="mb-4">
@@ -197,7 +252,7 @@ const ProductEditScreen = () => {
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || uploading}
             className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300 disabled:opacity-50"
           >
             {submitting ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Product'}
