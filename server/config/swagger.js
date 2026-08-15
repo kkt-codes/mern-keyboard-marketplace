@@ -123,7 +123,7 @@ const swaggerDefinition = {
                     user: { type: 'string' },
                     orderItems: { type: 'array', items: { $ref: '#/components/schemas/OrderItem' } },
                     shippingAddress: { $ref: '#/components/schemas/ShippingAddress' },
-                    paymentMethod: { type: 'string', example: 'PayPal' },
+                    paymentMethod: { type: 'string', example: 'Stripe' },
                     taxPrice: { type: 'number' },
                     shippingPrice: { type: 'number' },
                     totalPrice: { type: 'number' },

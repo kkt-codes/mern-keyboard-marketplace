@@ -6,7 +6,7 @@ const faqs = [
   },
   {
     question: 'What payment methods are supported?',
-    answer: 'Checkout currently supports PayPal and Stripe as selectable payment methods.',
+    answer: 'Checkout is processed securely through Stripe.',
   },
   {
     question: 'How do I track my order?',
@@ -16,11 +16,11 @@ const faqs = [
   {
     question: 'Can I edit a product after listing it?',
     answer:
-      'Yes — from the Seller Dashboard, click Edit on any of your products to update its price, stock, description, or image.',
+      'Yes - from the Seller Dashboard, click Edit on any of your products to update its price, stock, description, or image.',
   },
   {
     question: 'Who do I contact if something goes wrong with an order?',
-    answer: 'Use the Contact page and describe the issue — include your order ID if you have one.',
+    answer: 'Use the Contact page and describe the issue - include your order ID if you have one.',
   },
 ];
 

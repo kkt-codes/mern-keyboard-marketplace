@@ -3,7 +3,7 @@ const router = express.Router();
 const {
     addOrderItems,
     getOrderById,
-    updateOrderToPaid,
+    createCheckoutSession,
     getMyOrders,
     getSellerOrders
 } = require('../controllers/orderController');
@@ -28,7 +28,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
  *                 type: array
  *                 items: { $ref: '#/components/schemas/OrderItem' }
  *               shippingAddress: { $ref: '#/components/schemas/ShippingAddress' }
- *               paymentMethod: { type: string, example: PayPal }
+ *               paymentMethod: { type: string, example: Stripe }
  *               taxPrice: { type: number }
  *               shippingPrice: { type: number }
  *               totalPrice: { type: number }
@@ -122,9 +122,10 @@ router.route('/:id').get(protect, getOrderById);
 
 /**
  * @swagger
- * /orders/{id}/pay:
- *   put:
- *     summary: Mark an order as paid
+ * /orders/{id}/create-checkout-session:
+ *   post:
+ *     summary: Start a Stripe Checkout session to pay for an order
+ *     description: Only the order's own buyer can start this, and only if the order isn't already paid. The order isn't actually marked paid until Stripe confirms via webhook, not from this response.
  *     tags: [Orders]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
@@ -132,33 +133,31 @@ router.route('/:id').get(protect, getOrderById);
  *         name: id
  *         required: true
  *         schema: { type: string }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             description: Payment provider result (e.g. from a PayPal/Stripe callback).
- *             properties:
- *               id: { type: string }
- *               status: { type: string }
- *               update_time: { type: string }
- *               payer:
- *                 type: object
- *                 properties:
- *                   email_address: { type: string }
  *     responses:
  *       200:
- *         description: The updated, now-paid order.
+ *         description: Redirect the browser to this Stripe-hosted checkout URL.
  *         content:
  *           application/json:
- *             schema: { $ref: '#/components/schemas/Order' }
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 url: { type: string, format: uri }
+ *       400:
+ *         description: Order is already paid.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       401:
+ *         description: Logged in, but this isn't your order.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
  *       404:
  *         description: Order not found.
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Error' }
  */
-router.route('/:id/pay').put(protect, updateOrderToPaid);
+router.route('/:id/create-checkout-session').post(protect, createCheckoutSession);
 
 module.exports = router;

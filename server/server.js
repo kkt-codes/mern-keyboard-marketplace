@@ -15,11 +15,18 @@ const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const { stripeWebhookHandler } = require('./controllers/orderController');
 
 // Connect to Database
 connectDB();
 
 const app = express();
+
+// The Stripe webhook needs the raw, unparsed request body to verify the
+// signature — it must be mounted with express.raw() BEFORE the global
+// express.json() below, or that middleware would already have consumed
+// (and reformatted) the body by the time this route sees it.
+app.post('/api/orders/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
 // Middleware
 app.use(express.json()); // Body parser for JSON data

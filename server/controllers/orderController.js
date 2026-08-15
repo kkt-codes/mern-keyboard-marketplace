@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const stripe = require('../config/stripe');
 
 /**
  * @desc    Create new order
@@ -65,33 +66,104 @@ const getOrderById = async (req, res) => {
 };
 
 /**
- * @desc    Update order to paid
- * @route   PUT /api/orders/:id/pay
- * @access  Private
+ * @desc    Create a Stripe Checkout Session for an order
+ * @route   POST /api/orders/:id/create-checkout-session
+ * @access  Private (must be the order's own buyer)
+ * @returns {object} { url } - the Stripe-hosted checkout page to redirect to.
  */
-const updateOrderToPaid = async (req, res) => {
+const createCheckoutSession = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
 
-        if (order) {
-            order.isPaid = true;
-            order.paidAt = Date.now();
-            order.paymentResult = {
-                id: req.body.id,
-                status: req.body.status,
-                update_time: req.body.update_time,
-                email_address: req.body.payer.email_address
-            };
-
-            const updatedOrder = await order.save();
-
-            res.json(updatedOrder);
-        } else {
-            res.status(404).json({ message: 'Order not found' });
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
         }
+
+        if (order.user.toString() !== req.user._id.toString()) {
+            return res.status(401).json({ message: 'Not authorized to pay for this order' });
+        }
+
+        if (order.isPaid) {
+            return res.status(400).json({ message: 'Order is already paid' });
+        }
+
+        const lineItems = order.orderItems.map((item) => ({
+            price_data: {
+                currency: 'usd',
+                product_data: { name: item.name },
+                unit_amount: Math.round(item.price * 100)
+            },
+            quantity: item.qty
+        }));
+
+        // Shipping + tax are collapsed into one line item rather than
+        // itemized further, matching how the rest of the app already
+        // displays them as a single combined figure.
+        const shippingAndTax = order.shippingPrice + order.taxPrice;
+        if (shippingAndTax > 0) {
+            lineItems.push({
+                price_data: {
+                    currency: 'usd',
+                    product_data: { name: 'Shipping & Tax' },
+                    unit_amount: Math.round(shippingAndTax * 100)
+                },
+                quantity: 1
+            });
+        }
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'payment',
+            line_items: lineItems,
+            // The webhook (the only thing that actually marks an order paid)
+            // reads this back to know which order a completed session belongs to.
+            metadata: { orderId: order._id.toString() },
+            success_url: `${process.env.CLIENT_URL}/order/${order._id}?payment=success`,
+            cancel_url: `${process.env.CLIENT_URL}/order/${order._id}?payment=canceled`
+        });
+
+        res.json({ url: session.url });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+};
+
+/**
+ * @desc    Stripe webhook — the only thing that actually marks an order paid.
+ *          Requires the raw request body for signature verification, so this
+ *          route is mounted in server.js with express.raw(), before the
+ *          global express.json() middleware would otherwise consume it.
+ * @route   POST /api/orders/webhook
+ * @access  Public (authenticated via Stripe's signature instead of a JWT)
+ */
+const stripeWebhookHandler = async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET);
+    } catch (error) {
+        return res.status(400).send(`Webhook signature verification failed: ${error.message}`);
+    }
+
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+        const order = await Order.findById(session.metadata.orderId);
+
+        if (order && !order.isPaid) {
+            order.isPaid = true;
+            order.paidAt = Date.now();
+            order.paymentResult = {
+                id: session.payment_intent,
+                status: session.payment_status,
+                update_time: new Date().toISOString(),
+                email_address: session.customer_details?.email || ''
+            };
+            await order.save();
+        }
+    }
+
+    res.status(200).json({ received: true });
 };
 
 /**
@@ -152,7 +224,8 @@ const getSellerOrders = async (req, res) => {
 module.exports = {
     addOrderItems,
     getOrderById,
-    updateOrderToPaid,
+    createCheckoutSession,
+    stripeWebhookHandler,
     getMyOrders,
     getSellerOrders
 };

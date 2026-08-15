@@ -1,12 +1,16 @@
-import { useState, useContext, useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaCcStripe } from 'react-icons/fa';
 import { CartContext } from '../context/CartContext';
 
+/**
+ * Stripe is the only real payment method this app processes, so this step
+ * is just a confirmation rather than a choice between options — offering a
+ * fake PayPal radio button would be misleading now that Stripe actually works.
+ */
 const PaymentScreen = () => {
   const { shippingAddress, savePaymentMethod } = useContext(CartContext);
   const navigate = useNavigate();
-
-  const [paymentMethod, setPaymentMethod] = useState('PayPal');
 
   useEffect(() => {
     if (!shippingAddress.address) {
@@ -16,7 +20,7 @@ const PaymentScreen = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    savePaymentMethod(paymentMethod);
+    savePaymentMethod('Stripe');
     navigate('/placeorder');
   };
 
@@ -26,39 +30,11 @@ const PaymentScreen = () => {
         <h1 className="text-2xl font-bold mb-6 text-center">Payment Method</h1>
 
         <form onSubmit={submitHandler}>
-          <div className="mb-6">
-            <label className="block text-gray-700 text-lg font-bold mb-4">
-              Select Method
-            </label>
-            
-            <div className="flex items-center mb-4">
-              <input
-                type="radio"
-                id="PayPal"
-                name="paymentMethod"
-                value="PayPal"
-                checked={paymentMethod === 'PayPal'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-              />
-              <label htmlFor="PayPal" className="ml-3 block text-gray-700">
-                PayPal or Credit Card
-              </label>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="radio"
-                id="Stripe"
-                name="paymentMethod"
-                value="Stripe"
-                checked={paymentMethod === 'Stripe'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-              />
-              <label htmlFor="Stripe" className="ml-3 block text-gray-700">
-                Stripe
-              </label>
+          <div className="flex items-center gap-3 mb-6 border border-gray-200 rounded-lg p-4">
+            <FaCcStripe className="text-3xl text-indigo-600 shrink-0" />
+            <div>
+              <p className="font-semibold text-gray-800">Pay with Stripe</p>
+              <p className="text-sm text-gray-500">Card details are entered securely on Stripe's own page.</p>
             </div>
           </div>
 

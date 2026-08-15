@@ -1,32 +1,66 @@
-import { useEffect, useState, useContext } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useState, useContext, useCallback } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
 const OrderScreen = () => {
   const { id } = useParams();
   const { user } = useContext(AuthContext);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [payLoading, setPayLoading] = useState(false);
+
+  const fetchOrder = useCallback(async () => {
+    try {
+      const { data } = await api.get(`/orders/${id}`);
+      setOrder(data);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        const { data } = await api.get(`/orders/${id}`);
-        setOrder(data);
-        setLoading(false);
-      } catch (err) {
-        setError(err.response?.data?.message || err.message);
-        setLoading(false);
-      }
-    };
-
     if (user) {
       fetchOrder();
     }
-  }, [id, user]);
+  }, [user, fetchOrder]);
+
+  // Stripe redirects back here with ?payment=success|canceled. The webhook
+  // is what actually marks the order paid (usually already done by the time
+  // this redirect lands), so we just refetch to pick that up and surface a
+  // toast — this query param is purely a UX signal, never trusted for payment state.
+  useEffect(() => {
+    const payment = searchParams.get('payment');
+    if (!payment) return;
+
+    if (payment === 'success') {
+      toast.success('Payment successful!');
+      fetchOrder();
+    } else if (payment === 'canceled') {
+      toast.error('Payment canceled');
+    }
+
+    searchParams.delete('payment');
+    setSearchParams(searchParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const payHandler = async () => {
+    setPayLoading(true);
+    try {
+      const { data } = await api.post(`/orders/${id}/create-checkout-session`);
+      window.location.href = data.url;
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to start checkout');
+      setPayLoading(false);
+    }
+  };
 
   if (loading) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
   if (error) return <h2 className="text-center text-red-500 mt-10">{error}</h2>;
@@ -126,10 +160,13 @@ const OrderScreen = () => {
               <span>${order.totalPrice.toFixed(2)}</span>
             </div>
             
-            {/* Placeholder for PayPal Button */}
             {!order.isPaid && (
-               <button className="w-full bg-yellow-400 text-black font-bold py-2 px-4 rounded hover:bg-yellow-500 transition">
-                 Pay with PayPal (Mock)
+               <button
+                 onClick={payHandler}
+                 disabled={payLoading}
+                 className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition disabled:opacity-50"
+               >
+                 {payLoading ? 'Redirecting to Stripe...' : 'Pay with Stripe'}
                </button>
             )}
           </div>

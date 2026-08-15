@@ -15,7 +15,7 @@ export const CartProvider = ({ children }) => {
 
   const [paymentMethod, setPaymentMethod] = useState(() => {
     const storedMethod = localStorage.getItem('paymentMethod');
-    return storedMethod ? JSON.parse(storedMethod) : 'PayPal';
+    return storedMethod ? JSON.parse(storedMethod) : 'Stripe';
   });
 
   useEffect(() => {

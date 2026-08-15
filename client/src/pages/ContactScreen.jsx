@@ -3,9 +3,8 @@ import toast from 'react-hot-toast';
 
 /**
  * Contact form. There's no backend endpoint for this yet — submitting just
- * shows a confirmation toast, the same mock pattern PaymentScreen uses for
- * "Pay with PayPal (Mock)". Wire this up to a real endpoint (e.g. an email
- * service) when one exists.
+ * shows a confirmation toast. Wire this up to a real endpoint (e.g. an
+ * email service) when one exists.
  */
 const ContactScreen = () => {
   const [name, setName] = useState('');
