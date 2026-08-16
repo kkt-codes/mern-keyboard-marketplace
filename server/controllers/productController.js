@@ -11,9 +11,16 @@ const Order = require('../models/Order');
  */
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+const SORT_OPTIONS = {
+    newest: { createdAt: -1 },
+    price_asc: { price: 1 },
+    price_desc: { price: -1 }
+};
+
 /**
- * @desc    Fetch all products, optionally filtered by keyword (name) and/or category
- * @route   GET /api/products?keyword=&category=
+ * @desc    Fetch products, optionally filtered by keyword/category/price range,
+ *          sorted, and paginated.
+ * @route   GET /api/products?keyword=&category=&minPrice=&maxPrice=&sort=&page=&limit=
  * @access  Public
  */
 const getProducts = async (req, res) => {
@@ -28,8 +35,28 @@ const getProducts = async (req, res) => {
             filter.category = { $regex: `^${escapeRegex(req.query.category)}$`, $options: 'i' };
         }
 
-        const products = await Product.find(filter);
-        res.json(products);
+        if (req.query.minPrice || req.query.maxPrice) {
+            filter.price = {};
+            if (req.query.minPrice) filter.price.$gte = Number(req.query.minPrice);
+            if (req.query.maxPrice) filter.price.$lte = Number(req.query.maxPrice);
+        }
+
+        const sort = SORT_OPTIONS[req.query.sort] || SORT_OPTIONS.newest;
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.max(1, Number(req.query.limit) || 12);
+        const skip = (page - 1) * limit;
+
+        const [products, total] = await Promise.all([
+            Product.find(filter).sort(sort).skip(skip).limit(limit),
+            Product.countDocuments(filter)
+        ]);
+
+        res.json({
+            products,
+            page,
+            pages: Math.max(1, Math.ceil(total / limit)),
+            total
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

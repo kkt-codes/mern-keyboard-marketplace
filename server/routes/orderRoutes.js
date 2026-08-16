@@ -5,7 +5,8 @@ const {
     getOrderById,
     createCheckoutSession,
     getMyOrders,
-    getSellerOrders
+    getSellerOrders,
+    markOrderDelivered
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -159,5 +160,47 @@ router.route('/:id').get(protect, getOrderById);
  *             schema: { $ref: '#/components/schemas/Error' }
  */
 router.route('/:id/create-checkout-session').post(protect, createCheckoutSession);
+
+/**
+ * @swagger
+ * /orders/{id}/deliver:
+ *   put:
+ *     summary: Mark an order as delivered
+ *     description: Requires the seller or admin role. Sellers must own at least one item in the order, and the order must already be paid.
+ *     tags: [Orders]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: The updated, now-delivered order.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Order' }
+ *       400:
+ *         description: Order isn't paid yet, or is already marked delivered.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       401:
+ *         description: Logged in, but doesn't own any item in this order.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       403:
+ *         description: Logged in but not a seller/admin.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Order not found.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
+router.route('/:id/deliver').put(protect, authorize('seller', 'admin'), markOrderDelivered);
 
 module.exports = router;

@@ -221,11 +221,57 @@ const getSellerOrders = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Mark an order as delivered
+ * @route   PUT /api/orders/:id/deliver
+ * @access  Private (Seller/Admin — must own at least one item in the order)
+ * @note    Delivery status is a single flag on the whole order, not tracked
+ *          per seller/item, so any seller with a stake in a multi-seller
+ *          order can mark the entire thing delivered. Splitting that out
+ *          would need a schema change (per-line-item delivery status) this
+ *          app doesn't have.
+ */
+const markOrderDelivered = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        if (req.user.role !== 'admin') {
+            const myProducts = await Product.find({ user: req.user._id }).select('_id');
+            const myProductIds = myProducts.map((p) => p._id.toString());
+            const ownsAnItem = order.orderItems.some((item) => myProductIds.includes(item.product.toString()));
+
+            if (!ownsAnItem) {
+                return res.status(401).json({ message: 'Not authorized to update this order' });
+            }
+        }
+
+        if (!order.isPaid) {
+            return res.status(400).json({ message: 'Order must be paid before it can be marked delivered' });
+        }
+
+        if (order.isDelivered) {
+            return res.status(400).json({ message: 'Order is already marked delivered' });
+        }
+
+        order.isDelivered = true;
+        order.deliveredAt = Date.now();
+        const updatedOrder = await order.save();
+
+        res.json(updatedOrder);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     addOrderItems,
     getOrderById,
     createCheckoutSession,
     stripeWebhookHandler,
     getMyOrders,
-    getSellerOrders
+    getSellerOrders,
+    markOrderDelivered
 };

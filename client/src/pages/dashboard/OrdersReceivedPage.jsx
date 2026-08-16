@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 
@@ -10,6 +11,18 @@ const OrdersReceivedPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deliveringId, setDeliveringId] = useState(null);
+
+  const fetchOrders = async () => {
+    try {
+      const { data } = await api.get('/orders/sellerorders');
+      setOrders(data);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -18,19 +31,24 @@ const OrdersReceivedPage = () => {
       return;
     }
 
-    const fetchOrders = async () => {
-      try {
-        const { data } = await api.get('/orders/sellerorders');
-        setOrders(data);
-      } catch (err) {
-        setError(err.response?.data?.message || err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user, navigate]);
+
+  const deliverHandler = async (orderId) => {
+    setDeliveringId(orderId);
+    try {
+      await api.put(`/orders/${orderId}/deliver`);
+      toast.success('Order marked as delivered');
+      setOrders((prev) =>
+        prev.map((order) => (order._id === orderId ? { ...order, isDelivered: true } : order))
+      );
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update delivery status');
+    } finally {
+      setDeliveringId(null);
+    }
+  };
 
   if (loading) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
   if (error) return <h2 className="text-center text-red-500 mt-10">{error}</h2>;
@@ -53,6 +71,7 @@ const OrdersReceivedPage = () => {
                 <th className="py-3 px-6 text-left">Total</th>
                 <th className="py-3 px-6 text-center">Paid</th>
                 <th className="py-3 px-6 text-center">Delivered</th>
+                <th className="py-3 px-6 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="text-gray-600 text-sm">
@@ -75,6 +94,17 @@ const OrdersReceivedPage = () => {
                       <span className="bg-green-200 text-green-600 py-1 px-3 rounded-full text-xs">Delivered</span>
                     ) : (
                       <span className="bg-yellow-200 text-yellow-700 py-1 px-3 rounded-full text-xs">Pending</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-6 text-center">
+                    {order.isPaid && !order.isDelivered && (
+                      <button
+                        onClick={() => deliverHandler(order._id)}
+                        disabled={deliveringId === order._id}
+                        className="bg-indigo-500 text-white py-1 px-3 rounded text-xs hover:bg-indigo-600 transition disabled:opacity-50"
+                      >
+                        {deliveringId === order._id ? 'Updating...' : 'Mark Delivered'}
+                      </button>
                     )}
                   </td>
                 </tr>

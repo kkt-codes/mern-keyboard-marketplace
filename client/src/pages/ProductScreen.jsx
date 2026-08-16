@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { FaStar } from 'react-icons/fa';
@@ -10,7 +10,6 @@ import Rating from '../components/Rating';
 
 const ProductScreen = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { addToCart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
 
@@ -43,7 +42,6 @@ const ProductScreen = () => {
   const handleAddToCart = () => {
     addToCart(product, Number(qty));
     toast.success('Added to cart!');
-    navigate('/cart');
   };
 
   const submitReviewHandler = async (e) => {

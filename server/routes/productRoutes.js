@@ -17,7 +17,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
  * @swagger
  * /products:
  *   get:
- *     summary: List products, optionally filtered by keyword and/or category
+ *     summary: List products, filtered/sorted/paginated
  *     tags: [Products]
  *     parameters:
  *       - in: query
@@ -28,14 +28,36 @@ const { protect, authorize } = require('../middleware/authMiddleware');
  *         name: category
  *         schema: { type: string }
  *         description: Case-insensitive exact match against product category.
+ *       - in: query
+ *         name: minPrice
+ *         schema: { type: number }
+ *       - in: query
+ *         name: maxPrice
+ *         schema: { type: number }
+ *       - in: query
+ *         name: sort
+ *         schema: { type: string, enum: [newest, price_asc, price_desc] }
+ *         description: Defaults to newest.
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 12 }
  *     responses:
  *       200:
- *         description: All products in the catalog.
+ *         description: A page of matching products.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items: { $ref: '#/components/schemas/Product' }
+ *               type: object
+ *               properties:
+ *                 products:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/Product' }
+ *                 page: { type: integer }
+ *                 pages: { type: integer }
+ *                 total: { type: integer }
  *   post:
  *     summary: Create a product
  *     description: Requires the seller or admin role.

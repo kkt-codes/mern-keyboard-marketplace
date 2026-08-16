@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeScreen from './pages/HomeScreen';
+import ProductsScreen from './pages/ProductsScreen';
 import ProductScreen from './pages/ProductScreen';
 import CartScreen from './pages/CartScreen';
 import LoginScreen from './pages/LoginScreen';
@@ -33,6 +34,7 @@ function App() {
         <main className="container mx-auto px-4 py-8 flex-grow">
           <Routes>
             <Route path="/" element={<HomeScreen />} />
+            <Route path="/products" element={<ProductsScreen />} />
             <Route path="/product/:id" element={<ProductScreen />} />
             <Route path="/cart" element={<CartScreen />} />
             <Route path="/login" element={<LoginScreen />} />
