@@ -63,7 +63,7 @@ const OrderScreen = () => {
   };
 
   if (loading) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
-  if (error) return <h2 className="text-center text-red-500 mt-10">{error}</h2>;
+  if (error) return <h2 className="text-center text-red-400 mt-10">{error}</h2>;
 
   return (
     <div className="container mx-auto mt-10">
@@ -72,10 +72,10 @@ const OrderScreen = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
           {/* Shipping Info */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <div className="bg-card p-6 rounded-lg border border-line shadow-xl shadow-black/40 mb-6">
             <h2 className="text-xl font-bold mb-4">Shipping</h2>
             <p className="mb-2"><strong>Name: </strong> {order.user.name}</p>
-            <p className="mb-2"><strong>Email: </strong> <a href={`mailto:${order.user.email}`} className="text-indigo-600">{order.user.email}</a></p>
+            <p className="mb-2"><strong>Email: </strong> <a href={`mailto:${order.user.email}`} className="text-violet-400">{order.user.email}</a></p>
             <p className="mb-4">
               <strong>Address: </strong>
               {order.shippingAddress.address}, {order.shippingAddress.city},{' '}
@@ -83,14 +83,14 @@ const OrderScreen = () => {
             </p>
             
             {order.isDelivered ? (
-              <div className="bg-green-100 text-green-700 p-3 rounded">Delivered on {order.deliveredAt}</div>
+              <div className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 p-3 rounded">Delivered on {order.deliveredAt}</div>
             ) : (
-              <div className="bg-red-100 text-red-700 p-3 rounded">Not Delivered</div>
+              <div className="border border-red-500/30 bg-red-500/10 text-red-300 p-3 rounded">Not Delivered</div>
             )}
           </div>
 
           {/* Payment Method */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <div className="bg-card p-6 rounded-lg border border-line shadow-xl shadow-black/40 mb-6">
             <h2 className="text-xl font-bold mb-4">Payment Method</h2>
             <p className="mb-4">
               <strong>Method: </strong>
@@ -98,19 +98,19 @@ const OrderScreen = () => {
             </p>
             
             {order.isPaid ? (
-              <div className="bg-green-100 text-green-700 p-3 rounded">Paid on {order.paidAt}</div>
+              <div className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 p-3 rounded">Paid on {order.paidAt}</div>
             ) : (
-              <div className="bg-red-100 text-red-700 p-3 rounded">Not Paid</div>
+              <div className="border border-red-500/30 bg-red-500/10 text-red-300 p-3 rounded">Not Paid</div>
             )}
           </div>
 
           {/* Order Items */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <div className="bg-card p-6 rounded-lg border border-line shadow-xl shadow-black/40 mb-6">
             <h2 className="text-xl font-bold mb-4">Order Items</h2>
             {order.orderItems.length === 0 ? (
               <p>Order is empty</p>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <div className="divide-y divide-line">
                 {order.orderItems.map((item, index) => (
                   <div key={index} className="py-4 flex items-center justify-between">
                     <div className="flex items-center">
@@ -119,11 +119,11 @@ const OrderScreen = () => {
                         alt={item.name}
                         className="w-16 h-16 object-cover rounded mr-4"
                       />
-                      <Link to={`/product/${item.product}`} className="text-indigo-600 hover:underline">
+                      <Link to={`/product/${item.product}`} className="text-violet-400 hover:underline">
                         {item.name}
                       </Link>
                     </div>
-                    <div className="text-gray-700">
+                    <div className="text-slate-300">
                       {item.qty} x ${item.price} = ${(item.qty * item.price).toFixed(2)}
                     </div>
                   </div>
@@ -135,7 +135,7 @@ const OrderScreen = () => {
 
         {/* Order Summary */}
         <div className="md:col-span-1">
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <div className="bg-card p-6 rounded-lg border border-line shadow-xl shadow-black/40 border border-line">
             <h2 className="text-xl font-bold mb-4">Order Summary</h2>
             
             <div className="flex justify-between mb-2">
@@ -153,7 +153,7 @@ const OrderScreen = () => {
               <span>${order.taxPrice.toFixed(2)}</span>
             </div>
             
-            <div className="border-t border-gray-200 my-2"></div>
+            <div className="border-t border-line my-2"></div>
             
             <div className="flex justify-between mb-4 text-xl font-bold">
               <span>Total</span>
@@ -164,7 +164,7 @@ const OrderScreen = () => {
                <button
                  onClick={payHandler}
                  disabled={payLoading}
-                 className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition disabled:opacity-50"
+                 className="btn-primary w-full py-2.5 px-4"
                >
                  {payLoading ? 'Redirecting to Stripe...' : 'Pay with Stripe'}
                </button>

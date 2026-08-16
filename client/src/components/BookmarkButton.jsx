@@ -33,9 +33,9 @@ const BookmarkButton = ({ product, className = '' }) => {
       onClick={handleClick}
       aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this product'}
       aria-pressed={bookmarked}
-      className={`bg-white/90 backdrop-blur rounded-full p-2 shadow hover:scale-110 transition ${className}`}
+      className={`bg-card/95 backdrop-blur border border-line rounded-full p-2 shadow hover:scale-110 hover:border-violet-500/60 transition ${className}`}
     >
-      {bookmarked ? <FaBookmark className="text-indigo-600" /> : <FaRegBookmark className="text-gray-600" />}
+      {bookmarked ? <FaBookmark className="text-violet-400" /> : <FaRegBookmark className="text-slate-400" />}
     </button>
   );
 };

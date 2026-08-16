@@ -19,12 +19,12 @@ const ShippingScreen = () => {
 
   return (
     <div className="flex justify-center items-center mt-10">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+      <div className="w-full max-w-md bg-card p-8 rounded-lg border border-line shadow-xl shadow-black/40">
         <h1 className="text-2xl font-bold mb-6 text-center">Shipping Address</h1>
 
         <form onSubmit={submitHandler}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="address">
               Address
             </label>
             <input
@@ -33,13 +33,13 @@ const ShippingScreen = () => {
               placeholder="Enter address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="city">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="city">
               City
             </label>
             <input
@@ -48,13 +48,13 @@ const ShippingScreen = () => {
               placeholder="Enter city"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="postalCode">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="postalCode">
               Postal Code
             </label>
             <input
@@ -63,13 +63,13 @@ const ShippingScreen = () => {
               placeholder="Enter postal code"
               value={postalCode}
               onChange={(e) => setPostalCode(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="country">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="country">
               Country
             </label>
             <input
@@ -78,14 +78,14 @@ const ShippingScreen = () => {
               placeholder="Enter country"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300"
+            className="btn-primary w-full py-2.5 px-4"
           >
             Continue
           </button>

@@ -38,19 +38,48 @@ const HomeScreen = () => {
   return (
     <>
       {/* Hero */}
-      <section className="mb-12 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-lg">
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Built for typists who care.</h1>
-          <p className="text-lg text-gray-300 mb-8 max-w-xl mx-auto">
-            Mechanical keyboards from independent sellers - browse builds, compare specs, and order
+      <section className="relative mb-12 overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-slate-950 via-indigo-950/60 to-slate-950">
+        {/* Neon glow orbs — decorative only */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full bg-violet-600/25 blur-3xl [animation:pulse-glow_6s_ease-in-out_infinite]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-cyan-500/20 blur-3xl [animation:pulse-glow_7s_ease-in-out_1s_infinite]"
+        />
+
+        <div className="relative container mx-auto px-4 py-20 text-center">
+          <p className="mb-4 font-mono text-xs sm:text-sm uppercase tracking-[0.3em] text-cyan-300">
+            // Mechanical keyboard marketplace
+          </p>
+          <h1 className="text-4xl md:text-6xl font-bold mb-5">
+            Built for typists <span className="text-gradient">who care.</span>
+          </h1>
+          <p className="text-lg text-slate-300 mb-8 max-w-xl mx-auto">
+            Mechanical keyboards from independent sellers — browse builds, compare specs, and order
             straight from the people who make them.
           </p>
-          <Link
-            to="/products"
-            className="inline-block bg-indigo-600 hover:bg-indigo-700 transition text-white font-semibold px-8 py-3 rounded-lg"
-          >
-            Shop Now
-          </Link>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link to="/products" className="btn-primary px-8 py-3">
+              Shop Now
+            </Link>
+            <Link to="/products?category=Custom" className="btn-ghost px-8 py-3">
+              Explore Custom Builds
+            </Link>
+          </div>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
+            {['RGB', 'Hot-swap', 'QMK / VIA', 'Gasket mount', 'Wireless'].map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-line bg-card/60 px-3 py-1 font-mono text-xs text-slate-400"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -62,10 +91,10 @@ const HomeScreen = () => {
             <Link
               key={label}
               to={`/products?category=${encodeURIComponent(label)}`}
-              className="flex flex-col items-center justify-center gap-2 bg-white border border-gray-200 rounded-lg py-6 hover:shadow-md hover:border-indigo-300 transition"
+              className="group flex flex-col items-center justify-center gap-2 bg-card border border-line rounded-lg py-6 hover:border-violet-500/60 hover:-translate-y-1 hover:shadow-[0_0_24px_rgba(139,92,246,0.15)] transition-all duration-300"
             >
-              <Icon className="text-2xl text-indigo-600" />
-              <span className="font-medium text-gray-800">{label}</span>
+              <Icon className="text-2xl text-violet-400 group-hover:text-cyan-300 transition" />
+              <span className="font-medium text-slate-100">{label}</span>
             </Link>
           ))}
         </div>
@@ -75,15 +104,26 @@ const HomeScreen = () => {
       <section className="mb-16">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Latest Keyboards</h2>
-          <Link to="/products" className="text-sm text-indigo-600 hover:underline">
+          <Link to="/products" className="text-sm text-violet-400 hover:underline">
             View All Products &rarr;
           </Link>
         </div>
 
         {loading ? (
-          <h3 className="text-center text-xl mt-10">Loading...</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse rounded-lg border border-line bg-card overflow-hidden">
+                <div className="h-48 bg-card-2" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 w-3/4 rounded bg-card-2" />
+                  <div className="h-3 w-1/2 rounded bg-card-2" />
+                  <div className="h-6 w-1/3 rounded bg-card-2" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : products.length === 0 ? (
-          <div className="bg-blue-100 text-blue-700 p-4 rounded text-center">
+          <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-4 rounded text-center">
             No products listed yet — check back soon.
           </div>
         ) : (
@@ -102,11 +142,11 @@ const HomeScreen = () => {
           {TRUST_BADGES.map(({ icon: Icon, title, text }) => (
             <div
               key={title}
-              className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition"
+              className="bg-card rounded-lg border border-line shadow-xl shadow-black/40 p-6 text-center hover:border-violet-500/50 hover:shadow-[0_0_24px_rgba(139,92,246,0.15)] transition"
             >
-              <Icon className="text-3xl text-indigo-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-800 mb-1">{title}</h3>
-              <p className="text-sm text-gray-600">{text}</p>
+              <Icon className="text-3xl text-violet-400 mx-auto mb-3" />
+              <h3 className="font-semibold text-slate-100 mb-1">{title}</h3>
+              <p className="text-sm text-slate-400">{text}</p>
             </div>
           ))}
         </div>

@@ -70,15 +70,15 @@ const ProductScreen = () => {
   };
 
   if (loading) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
-  if (error) return <h2 className="text-center text-red-500 mt-10">{error}</h2>;
+  if (error) return <h2 className="text-center text-red-400 mt-10">{error}</h2>;
   if (!product) return <h2 className="text-center text-xl mt-10">Product not found</h2>;
 
   const alreadyReviewed = user && product.reviews.some((r) => r.user === user._id);
 
   return (
     <div className="container mx-auto mt-10">
-      <Link to="/" className="inline-block mb-6 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition">
-        &larr; Go Back
+      <Link to="/products" className="btn-ghost mb-6 px-4 py-2 text-sm">
+        &larr; Back to Products
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -88,7 +88,7 @@ const ProductScreen = () => {
             <img
               src={product.image}
               alt={product.name}
-              className="w-full rounded-lg shadow-lg object-cover"
+              className="w-full rounded-lg border border-line shadow-xl shadow-black/40 object-cover"
             />
             <BookmarkButton product={product} className="absolute top-2 right-2" />
           </div>
@@ -96,35 +96,37 @@ const ProductScreen = () => {
 
         {/* Product Details */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-          <p className="text-sm text-gray-500 mb-4">Brand: {product.brand}</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{product.name}</h1>
+          <p className="mb-4 font-mono text-xs uppercase tracking-widest text-cyan-300">
+            {product.brand}{product.category ? ` · ${product.category}` : ''}
+          </p>
 
           <div className="mb-4">
             <Rating value={product.rating} text={`(${product.numReviews} review${product.numReviews === 1 ? '' : 's'})`} />
           </div>
 
-          <p className="text-2xl font-bold text-gray-900 mb-4">${product.price}</p>
+          <p className="font-mono text-3xl font-bold text-white mb-4">${product.price}</p>
 
-          <p className="text-gray-700 mb-6 leading-relaxed">
+          <p className="text-slate-300 mb-6 leading-relaxed">
             {product.description}
           </p>
 
           {/* Stock & Add to Cart */}
-          <div className="border border-gray-200 rounded-lg p-4 shadow-sm">
+          <div className="bg-card border border-line rounded-lg p-4">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-600">Status:</span>
-              <span className={`font-semibold ${product.countInStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <span className="text-slate-400">Status:</span>
+              <span className={`font-semibold ${product.countInStock > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {product.countInStock > 0 ? 'In Stock' : 'Out of Stock'}
               </span>
             </div>
 
             {product.countInStock > 0 && (
               <div className="flex justify-between items-center mb-4">
-                <span className="text-gray-600">Quantity:</span>
+                <span className="text-slate-400">Quantity:</span>
                 <select
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
-                  className="border border-gray-300 rounded px-2 py-1"
+                  className="border border-line rounded px-2 py-1"
                 >
                   {[...Array(product.countInStock).keys()].map((x) => (
                     <option key={x + 1} value={x + 1}>
@@ -137,11 +139,7 @@ const ProductScreen = () => {
 
             <button
               onClick={handleAddToCart}
-              className={`w-full py-3 rounded-lg font-semibold text-white transition ${
-                product.countInStock > 0
-                  ? 'bg-indigo-600 hover:bg-indigo-700'
-                  : 'bg-gray-400 cursor-not-allowed'
-              }`}
+              className="btn-primary w-full py-3"
               disabled={product.countInStock === 0}
             >
               {product.countInStock > 0 ? 'Add to Cart' : 'Out of Stock'}
@@ -156,18 +154,18 @@ const ProductScreen = () => {
           <h2 className="text-2xl font-bold mb-4">Reviews</h2>
 
           {product.reviews.length === 0 && (
-            <div className="bg-blue-100 text-blue-700 p-3 rounded">No reviews yet.</div>
+            <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">No reviews yet.</div>
           )}
 
           <div className="space-y-4">
             {product.reviews.map((review) => (
-              <div key={review._id} className="border-b border-gray-200 pb-4">
+              <div key={review._id} className="border-b border-line pb-4">
                 <div className="flex items-center justify-between mb-1">
-                  <strong className="text-gray-800">{review.name}</strong>
-                  <span className="text-xs text-gray-400">{review.createdAt.substring(0, 10)}</span>
+                  <strong className="text-slate-100">{review.name}</strong>
+                  <span className="text-xs text-slate-500">{review.createdAt.substring(0, 10)}</span>
                 </div>
                 <Rating value={review.rating} size="text-sm" />
-                <p className="text-gray-700 mt-1">{review.comment}</p>
+                <p className="text-slate-300 mt-1">{review.comment}</p>
               </div>
             ))}
           </div>
@@ -177,15 +175,15 @@ const ProductScreen = () => {
           <h2 className="text-2xl font-bold mb-4">Write a Review</h2>
 
           {!user ? (
-            <div className="bg-blue-100 text-blue-700 p-3 rounded">
+            <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">
               <Link to="/login" className="underline font-bold">Sign in</Link> to write a review.
             </div>
           ) : alreadyReviewed ? (
-            <div className="bg-blue-100 text-blue-700 p-3 rounded">You've already reviewed this product.</div>
+            <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">You've already reviewed this product.</div>
           ) : (
-            <form onSubmit={submitReviewHandler} className="bg-white p-6 rounded-lg shadow-md">
+            <form onSubmit={submitReviewHandler} className="bg-card p-6 rounded-lg border border-line shadow-xl shadow-black/40">
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Rating</label>
+                <label className="block text-slate-300 text-sm font-bold mb-2">Rating</label>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -204,7 +202,7 @@ const ProductScreen = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="comment">
+                <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="comment">
                   Comment
                 </label>
                 <textarea
@@ -212,7 +210,7 @@ const ProductScreen = () => {
                   rows={4}
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
                   required
                 />
               </div>
@@ -220,7 +218,7 @@ const ProductScreen = () => {
               <button
                 type="submit"
                 disabled={submittingReview}
-                className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300 disabled:opacity-50"
+                className="btn-primary w-full py-2.5 px-4"
               >
                 {submittingReview ? 'Submitting...' : 'Submit Review'}
               </button>

@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Dark "battlestation" palette — page void, two surface levels, one border tone. */
+  --color-abyss: #05060f;
+  --color-card: #0d1120;
+  --color-card-2: #151a31;
+  --color-line: #272e52;
+}
+
 /*
  * Tailwind v4 redefined `.container` as just `width: 100%` with no
  * responsive max-width, unlike v3. This restores centered content with
@@ -28,14 +39,102 @@
 }
 
 @layer base {
-  body {
-    @apply bg-gray-100 text-gray-800 font-sans;
+  :root {
+    color-scheme: dark;
+    accent-color: theme(--color-violet-500);
   }
+
+  body {
+    @apply bg-abyss text-slate-200 font-sans antialiased;
+    /* Two soft neon glows anchored to the corners plus a faint circuit grid.
+       Fixed attachment keeps the glow steady while content scrolls past. */
+    background-image:
+      radial-gradient(55rem 38rem at 88% -12%, rgba(34, 211, 238, 0.08), transparent 60%),
+      radial-gradient(50rem 36rem at -12% 18%, rgba(139, 92, 246, 0.1), transparent 60%),
+      linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px);
+    background-size: auto, auto, 44px 44px, 44px 44px;
+    background-attachment: fixed;
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold;
+    @apply font-bold tracking-tight text-slate-100;
+  }
+
+  input, select, textarea {
+    @apply bg-card-2 text-slate-100 placeholder-slate-500 border-line;
+  }
+
+  ::selection {
+    background: rgba(139, 92, 246, 0.5);
+    color: #fff;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme(--color-line) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme(--color-line);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid theme(--color-cyan-400);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-/*@theme {*/
-/*  --breakpoint-xl: 90rem; !* hardcoded px instead of the default 1280px *!*/
-/*}*/
+@layer components {
+  /* Neon gradient text for headings/logo moments. */
+  .text-gradient {
+    @apply bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent;
+  }
+
+  /* Primary CTA: violet→indigo gradient that lifts and glows on hover. */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg
+      bg-gradient-to-r from-violet-600 to-indigo-500 font-semibold text-white
+      transition-all duration-200 hover:from-violet-500 hover:to-indigo-400
+      hover:shadow-[0_0_28px_rgba(139,92,246,0.35)]
+      disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none;
+  }
+
+  /* Secondary action: quiet surface button with a border that wakes up. */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg
+      border border-line bg-card-2 font-medium text-slate-200
+      transition-all duration-200 hover:border-violet-500/60 hover:text-white;
+  }
+
+  /* Card glow on hover — pair with `card`-style surfaces. */
+  .hover-glow {
+    @apply transition-all duration-300 hover:border-violet-500/50
+      hover:shadow-[0_0_30px_rgba(139,92,246,0.18)];
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}

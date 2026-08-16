@@ -61,9 +61,9 @@ const PlaceOrderScreen = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
           {/* Shipping Address */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <div className="bg-card p-6 rounded-lg border border-line shadow-xl shadow-black/40 mb-6">
             <h2 className="text-xl font-bold mb-4">Shipping</h2>
-            <p className="text-gray-700">
+            <p className="text-slate-300">
               <strong>Address: </strong>
               {shippingAddress.address}, {shippingAddress.city},{' '}
               {shippingAddress.postalCode}, {shippingAddress.country}
@@ -71,21 +71,21 @@ const PlaceOrderScreen = () => {
           </div>
 
           {/* Payment Method */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <div className="bg-card p-6 rounded-lg border border-line shadow-xl shadow-black/40 mb-6">
             <h2 className="text-xl font-bold mb-4">Payment Method</h2>
-            <p className="text-gray-700">
+            <p className="text-slate-300">
               <strong>Method: </strong>
               {paymentMethod}
             </p>
           </div>
 
           {/* Order Items */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <div className="bg-card p-6 rounded-lg border border-line shadow-xl shadow-black/40 mb-6">
             <h2 className="text-xl font-bold mb-4">Order Items</h2>
             {cartItems.length === 0 ? (
               <p>Your cart is empty</p>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <div className="divide-y divide-line">
                 {cartItems.map((item) => (
                   <div key={item._id} className="py-4 flex items-center justify-between">
                     <div className="flex items-center">
@@ -94,11 +94,11 @@ const PlaceOrderScreen = () => {
                         alt={item.name}
                         className="w-16 h-16 object-cover rounded mr-4"
                       />
-                      <Link to={`/product/${item._id}`} className="text-indigo-600 hover:underline">
+                      <Link to={`/product/${item._id}`} className="text-violet-400 hover:underline">
                         {item.name}
                       </Link>
                     </div>
-                    <div className="text-gray-700">
+                    <div className="text-slate-300">
                       {item.qty} x ${item.price} = ${(item.qty * item.price).toFixed(2)}
                     </div>
                   </div>
@@ -110,7 +110,7 @@ const PlaceOrderScreen = () => {
 
         {/* Order Summary */}
         <div className="md:col-span-1">
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <div className="bg-card p-6 rounded-lg border border-line shadow-xl shadow-black/40 border border-line">
             <h2 className="text-xl font-bold mb-4">Order Summary</h2>
             
             <div className="flex justify-between mb-2">
@@ -128,7 +128,7 @@ const PlaceOrderScreen = () => {
               <span>${taxPrice}</span>
             </div>
             
-            <div className="border-t border-gray-200 my-2"></div>
+            <div className="border-t border-line my-2"></div>
             
             <div className="flex justify-between mb-4 text-xl font-bold">
               <span>Total</span>
@@ -137,7 +137,7 @@ const PlaceOrderScreen = () => {
 
             <button
               type="button"
-              className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+              className="btn-primary w-full py-3"
               disabled={cartItems.length === 0}
               onClick={placeOrderHandler}
             >

@@ -21,15 +21,15 @@ const ContactScreen = () => {
 
   return (
     <div className="flex justify-center mt-10">
-      <div className="w-full max-w-lg bg-white p-8 rounded-lg shadow-md">
+      <div className="w-full max-w-lg bg-card p-8 rounded-lg border border-line shadow-xl shadow-black/40">
         <h1 className="text-2xl font-bold mb-2">Contact Us</h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-slate-400 mb-6">
           Questions about an order, a listing, or anything else? Send us a message.
         </p>
 
         <form onSubmit={submitHandler}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="name">
               Name
             </label>
             <input
@@ -37,13 +37,13 @@ const ContactScreen = () => {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="email">
               Email Address
             </label>
             <input
@@ -51,13 +51,13 @@ const ContactScreen = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="message">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="message">
               Message
             </label>
             <textarea
@@ -65,14 +65,14 @@ const ContactScreen = () => {
               rows={5}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300"
+            className="btn-primary w-full py-2.5 px-4"
           >
             Send Message
           </button>

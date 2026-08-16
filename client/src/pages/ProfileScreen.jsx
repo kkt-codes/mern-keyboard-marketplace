@@ -5,8 +5,8 @@ import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
 const ROLE_STYLES = {
-  buyer: 'bg-blue-100 text-blue-700',
-  seller: 'bg-green-100 text-green-700',
+  buyer: 'border border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
+  seller: 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
   admin: 'bg-purple-100 text-purple-700',
 };
 
@@ -68,7 +68,7 @@ const ProfileScreen = () => {
 
   return (
     <div className="flex justify-center mt-10">
-      <div className="w-full max-w-lg bg-white p-8 rounded-lg shadow-md">
+      <div className="w-full max-w-lg bg-card p-8 rounded-lg border border-line shadow-xl shadow-black/40">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">My Profile</h1>
           <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${ROLE_STYLES[profile.role]}`}>
@@ -76,7 +76,7 @@ const ProfileScreen = () => {
           </span>
         </div>
 
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-slate-400 mb-6">
           Member since {new Date(profile.createdAt).toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'long',
@@ -86,7 +86,7 @@ const ProfileScreen = () => {
 
         <form onSubmit={submitHandler}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="name">
               Name
             </label>
             <input
@@ -94,13 +94,13 @@ const ProfileScreen = () => {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="email">
               Email Address
             </label>
             <input
@@ -108,7 +108,7 @@ const ProfileScreen = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
@@ -116,13 +116,13 @@ const ProfileScreen = () => {
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300 disabled:opacity-50"
+            className="btn-primary w-full py-2.5 px-4"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </form>
 
-        <Link to="/dashboard" className="block text-center text-sm text-indigo-600 hover:underline mt-6">
+        <Link to="/dashboard" className="block text-center text-sm text-violet-400 hover:underline mt-6">
           Go to Dashboard &rarr;
         </Link>
       </div>

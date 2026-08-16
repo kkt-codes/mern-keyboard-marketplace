@@ -13,7 +13,7 @@ const BookmarksPage = () => {
       <h1 className="text-2xl font-bold mb-6">Bookmarked Products</h1>
 
       {bookmarkedProducts.length === 0 ? (
-        <div className="bg-blue-100 text-blue-700 p-3 rounded">
+        <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">
           No bookmarks yet. Tap the bookmark icon on any product to save it here.
         </div>
       ) : (

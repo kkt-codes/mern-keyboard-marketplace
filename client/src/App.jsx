@@ -29,7 +29,20 @@ function App() {
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
-        <Toaster position="top-center" reverseOrder={false} />
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          toastOptions={{
+            style: {
+              background: '#151a31',
+              color: '#e2e8f0',
+              border: '1px solid #272e52',
+              boxShadow: '0 0 24px rgba(139, 92, 246, 0.15)',
+            },
+            success: { iconTheme: { primary: '#8b5cf6', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#f87171', secondary: '#fff' } },
+          }}
+        />
         <Header />
         <main className="container mx-auto px-4 py-8 flex-grow">
           <Routes>

@@ -119,12 +119,12 @@ const ProductEditScreen = () => {
   };
 
   if (loading) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
-  if (error) return <h2 className="text-center text-red-500 mt-10">{error}</h2>;
+  if (error) return <h2 className="text-center text-red-400 mt-10">{error}</h2>;
 
   return (
     <div className="flex justify-center mt-10">
-      <div className="w-full max-w-lg bg-white p-8 rounded-lg shadow-md">
-        <Link to="/dashboard" className="inline-block mb-6 text-indigo-600 hover:underline">
+      <div className="w-full max-w-lg bg-card p-8 rounded-lg border border-line shadow-xl shadow-black/40">
+        <Link to="/dashboard" className="inline-block mb-6 text-violet-400 hover:underline">
           &larr; Back to Dashboard
         </Link>
 
@@ -132,7 +132,7 @@ const ProductEditScreen = () => {
 
         <form onSubmit={submitHandler}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="name">
               Name
             </label>
             <input
@@ -140,13 +140,13 @@ const ProductEditScreen = () => {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="image">
               Product Image
             </label>
 
@@ -157,9 +157,9 @@ const ProductEditScreen = () => {
                   type="button"
                   onClick={removeImageHandler}
                   aria-label="Remove image"
-                  className="absolute top-2 right-2 bg-white/90 backdrop-blur rounded-full p-2 shadow hover:scale-110 transition"
+                  className="absolute top-2 right-2 bg-card/95 backdrop-blur rounded-full p-2 shadow hover:scale-110 transition"
                 >
-                  <FaTimes className="text-gray-600" />
+                  <FaTimes className="text-slate-400" />
                 </button>
               </div>
             )}
@@ -170,13 +170,13 @@ const ProductEditScreen = () => {
               ref={fileInputRef}
               accept="image/jpeg,image/png,image/webp"
               onChange={imageChangeHandler}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
-            {uploading && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
+            {uploading && <p className="text-sm text-slate-400 mt-1">Uploading...</p>}
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="brand">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="brand">
               Brand
             </label>
             <input
@@ -184,13 +184,13 @@ const ProductEditScreen = () => {
               id="brand"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="category">
               Category
             </label>
             <input
@@ -198,13 +198,13 @@ const ProductEditScreen = () => {
               id="category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="description">
               Description
             </label>
             <textarea
@@ -212,14 +212,14 @@ const ProductEditScreen = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="price">
+              <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="price">
                 Price
               </label>
               <input
@@ -229,12 +229,12 @@ const ProductEditScreen = () => {
                 step="0.01"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="countInStock">
+              <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="countInStock">
                 Stock
               </label>
               <input
@@ -244,7 +244,7 @@ const ProductEditScreen = () => {
                 step="1"
                 value={countInStock}
                 onChange={(e) => setCountInStock(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
                 required
               />
             </div>
@@ -253,7 +253,7 @@ const ProductEditScreen = () => {
           <button
             type="submit"
             disabled={submitting || uploading}
-            className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300 disabled:opacity-50"
+            className="btn-primary w-full py-2.5 px-4"
           >
             {submitting ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Product'}
           </button>

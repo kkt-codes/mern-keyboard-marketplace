@@ -31,17 +31,17 @@ const faqs = [
 const FaqScreen = () => {
   return (
     <div className="container mx-auto mt-10 max-w-3xl">
-      <div className="bg-white p-8 rounded-lg shadow-md">
+      <div className="bg-card p-8 rounded-lg border border-line shadow-xl shadow-black/40">
         <h1 className="text-3xl font-bold mb-6">Frequently Asked Questions</h1>
 
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-line">
           {faqs.map((faq, index) => (
             <details key={index} className="py-4 group">
-              <summary className="flex justify-between items-center cursor-pointer font-semibold text-gray-800 list-none">
+              <summary className="flex justify-between items-center cursor-pointer font-semibold text-slate-100 list-none">
                 {faq.question}
-                <span className="text-gray-400 group-open:rotate-45 transition-transform">+</span>
+                <span className="text-slate-500 group-open:rotate-45 transition-transform">+</span>
               </summary>
-              <p className="text-gray-600 mt-2 leading-relaxed">{faq.answer}</p>
+              <p className="text-slate-400 mt-2 leading-relaxed">{faq.answer}</p>
             </details>
           ))}
         </div>

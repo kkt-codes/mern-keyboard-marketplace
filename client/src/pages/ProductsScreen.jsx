@@ -81,13 +81,13 @@ const ProductsScreen = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-8">
         {/* Filters */}
-        <aside className="bg-white rounded-lg shadow-md p-5 h-fit">
+        <aside className="bg-card rounded-lg border border-line shadow-xl shadow-black/40 p-5 h-fit">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-gray-800">Filters</h2>
+            <h2 className="font-bold text-slate-100">Filters</h2>
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
+                className="text-xs text-violet-400 hover:underline flex items-center gap-1"
               >
                 <FaTimes /> Clear
               </button>
@@ -95,20 +95,20 @@ const ProductsScreen = () => {
           </div>
 
           {keyword && (
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-slate-400 mb-4">
               Searching for <strong>&ldquo;{keyword}&rdquo;</strong>
             </p>
           )}
 
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-600 mb-2">Category</h3>
+            <h3 className="text-sm font-semibold text-slate-400 mb-2">Category</h3>
             <div className="space-y-1">
               {CATEGORIES.map(({ label }) => (
                 <button
                   key={label}
                   onClick={() => updateParams({ category: category === label ? '' : label })}
                   className={`block w-full text-left px-2 py-1.5 rounded text-sm transition ${
-                    category === label ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                    category === label ? 'bg-violet-600 text-white' : 'text-slate-300 hover:bg-card-2'
                   }`}
                 >
                   {label}
@@ -118,7 +118,7 @@ const ProductsScreen = () => {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-600 mb-2">Price Range</h3>
+            <h3 className="text-sm font-semibold text-slate-400 mb-2">Price Range</h3>
             <form onSubmit={applyPriceFilter}>
               <div className="flex items-center gap-2 mb-2">
                 <input
@@ -127,21 +127,21 @@ const ProductsScreen = () => {
                   placeholder="Min"
                   value={priceInputs.min}
                   onChange={(e) => setPriceInputs((p) => ({ ...p, min: e.target.value }))}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  className="w-full px-2 py-1 border border-line rounded text-sm"
                 />
-                <span className="text-gray-400">-</span>
+                <span className="text-slate-500">-</span>
                 <input
                   type="number"
                   min="0"
                   placeholder="Max"
                   value={priceInputs.max}
                   onChange={(e) => setPriceInputs((p) => ({ ...p, max: e.target.value }))}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  className="w-full px-2 py-1 border border-line rounded text-sm"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-1.5 rounded transition"
+                className="btn-ghost w-full text-sm py-1.5"
               >
                 Apply
               </button>
@@ -152,13 +152,13 @@ const ProductsScreen = () => {
         {/* Results */}
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-400">
               {loading ? 'Loading...' : `${data.total} result${data.total === 1 ? '' : 's'}`}
             </p>
             <select
               value={sort}
               onChange={(e) => updateParams({ sort: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm"
+              className="border border-line rounded px-3 py-1.5 text-sm"
             >
               <option value="newest">Newest</option>
               <option value="price_asc">Price: Low to High</option>
@@ -167,11 +167,22 @@ const ProductsScreen = () => {
           </div>
 
           {loading ? (
-            <h3 className="text-center text-xl mt-10">Loading...</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="animate-pulse rounded-lg border border-line bg-card overflow-hidden">
+                  <div className="h-48 bg-card-2" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 w-3/4 rounded bg-card-2" />
+                    <div className="h-3 w-1/2 rounded bg-card-2" />
+                    <div className="h-6 w-1/3 rounded bg-card-2" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : error ? (
-            <h3 className="text-center text-red-500 mt-10">{error}</h3>
+            <h3 className="text-center text-red-400 mt-10">{error}</h3>
           ) : data.products.length === 0 ? (
-            <div className="bg-blue-100 text-blue-700 p-4 rounded text-center">
+            <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-4 rounded text-center">
               No products match your filters.
             </div>
           ) : (
@@ -190,8 +201,8 @@ const ProductsScreen = () => {
                       onClick={() => goToPage(x + 1)}
                       className={`w-9 h-9 rounded-lg text-sm font-medium transition ${
                         page === x + 1
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                          ? 'bg-violet-600 text-white shadow-[0_0_16px_rgba(139,92,246,0.4)]'
+                          : 'bg-card border border-line text-slate-300 hover:bg-card-2'
                       }`}
                     >
                       {x + 1}

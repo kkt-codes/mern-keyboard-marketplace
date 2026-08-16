@@ -30,14 +30,14 @@ const LoginScreen = () => {
 
   return (
     <div className="flex justify-center items-center mt-10">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+      <div className="w-full max-w-md bg-card p-8 rounded-lg border border-line shadow-xl shadow-black/40">
         <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
         
-        {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+        {error && <div className="border border-red-500/30 bg-red-500/10 text-red-300 p-3 rounded mb-4">{error}</div>}
 
         <form onSubmit={submitHandler}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="email">
               Email Address
             </label>
             <input
@@ -46,13 +46,13 @@ const LoginScreen = () => {
               placeholder="Enter email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="password">
               Password
             </label>
             <input
@@ -61,23 +61,23 @@ const LoginScreen = () => {
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300"
+            className="btn-primary w-full py-2.5 px-4"
           >
             Sign In
           </button>
         </form>
 
         <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-400">
             New Customer?{' '}
-            <Link to={redirect ? `/register?redirect=${redirect}` : '/register'} className="text-indigo-600 hover:underline">
+            <Link to={redirect ? `/register?redirect=${redirect}` : '/register'} className="text-violet-400 hover:underline">
               Register
             </Link>
           </p>

@@ -38,15 +38,15 @@ const RegisterScreen = () => {
 
   return (
     <div className="flex justify-center items-center mt-10">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+      <div className="w-full max-w-md bg-card p-8 rounded-lg border border-line shadow-xl shadow-black/40">
         <h1 className="text-2xl font-bold mb-6 text-center">Sign Up</h1>
         
-        {message && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{message}</div>}
-        {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+        {message && <div className="border border-red-500/30 bg-red-500/10 text-red-300 p-3 rounded mb-4">{message}</div>}
+        {error && <div className="border border-red-500/30 bg-red-500/10 text-red-300 p-3 rounded mb-4">{error}</div>}
 
         <form onSubmit={submitHandler}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="name">
               Name
             </label>
             <input
@@ -55,13 +55,13 @@ const RegisterScreen = () => {
               placeholder="Enter name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="email">
               Email Address
             </label>
             <input
@@ -70,13 +70,13 @@ const RegisterScreen = () => {
               placeholder="Enter email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="password">
               Password
             </label>
             <input
@@ -85,13 +85,13 @@ const RegisterScreen = () => {
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="confirmPassword">
+            <label className="block text-slate-300 text-sm font-bold mb-2" htmlFor="confirmPassword">
               Confirm Password
             </label>
             <input
@@ -100,13 +100,13 @@ const RegisterScreen = () => {
               placeholder="Confirm password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2">I want to</label>
+            <label className="block text-slate-300 text-sm font-bold mb-2">I want to</label>
             <div className="flex items-center mb-2">
               <input
                 type="radio"
@@ -115,9 +115,9 @@ const RegisterScreen = () => {
                 value="buyer"
                 checked={role === 'buyer'}
                 onChange={(e) => setRole(e.target.value)}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                className="h-4 w-4 text-violet-400 focus:ring-violet-500 border-line"
               />
-              <label htmlFor="roleBuyer" className="ml-3 block text-gray-700">
+              <label htmlFor="roleBuyer" className="ml-3 block text-slate-300">
                 Buy keyboards
               </label>
             </div>
@@ -129,9 +129,9 @@ const RegisterScreen = () => {
                 value="seller"
                 checked={role === 'seller'}
                 onChange={(e) => setRole(e.target.value)}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                className="h-4 w-4 text-violet-400 focus:ring-violet-500 border-line"
               />
-              <label htmlFor="roleSeller" className="ml-3 block text-gray-700">
+              <label htmlFor="roleSeller" className="ml-3 block text-slate-300">
                 Sell keyboards
               </label>
             </div>
@@ -139,16 +139,16 @@ const RegisterScreen = () => {
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300"
+            className="btn-primary w-full py-2.5 px-4"
           >
             Register
           </button>
         </form>
 
         <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-400">
             Have an Account?{' '}
-            <Link to={redirect ? `/login?redirect=${redirect}` : '/login'} className="text-indigo-600 hover:underline">
+            <Link to={redirect ? `/login?redirect=${redirect}` : '/login'} className="text-violet-400 hover:underline">
               Login
             </Link>
           </p>

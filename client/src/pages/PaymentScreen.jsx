@@ -26,21 +26,21 @@ const PaymentScreen = () => {
 
   return (
     <div className="flex justify-center items-center mt-10">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+      <div className="w-full max-w-md bg-card p-8 rounded-lg border border-line shadow-xl shadow-black/40">
         <h1 className="text-2xl font-bold mb-6 text-center">Payment Method</h1>
 
         <form onSubmit={submitHandler}>
-          <div className="flex items-center gap-3 mb-6 border border-gray-200 rounded-lg p-4">
-            <FaCcStripe className="text-3xl text-indigo-600 shrink-0" />
+          <div className="flex items-center gap-3 mb-6 border border-line rounded-lg p-4">
+            <FaCcStripe className="text-3xl text-violet-400 shrink-0" />
             <div>
-              <p className="font-semibold text-gray-800">Pay with Stripe</p>
-              <p className="text-sm text-gray-500">Card details are entered securely on Stripe's own page.</p>
+              <p className="font-semibold text-slate-100">Pay with Stripe</p>
+              <p className="text-sm text-slate-400">Card details are entered securely on Stripe's own page.</p>
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300"
+            className="btn-primary w-full py-2.5 px-4"
           >
             Continue
           </button>

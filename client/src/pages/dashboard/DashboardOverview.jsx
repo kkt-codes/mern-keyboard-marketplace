@@ -16,13 +16,13 @@ import { BookmarkContext } from '../../context/BookmarkContext';
 const LOW_STOCK_THRESHOLD = 5;
 
 const StatCard = ({ icon: Icon, label, value }) => (
-  <div className="bg-white rounded-lg shadow-md p-5 flex items-center gap-4">
-    <div className="bg-indigo-100 text-indigo-600 rounded-full p-3">
+  <div className="bg-card rounded-lg border border-line shadow-xl shadow-black/40 p-5 flex items-center gap-4">
+    <div className="bg-violet-500/15 text-violet-400 rounded-full p-3">
       <Icon className="text-xl" />
     </div>
     <div>
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-xl font-bold text-gray-800">{value}</p>
+      <p className="text-sm text-slate-400">{label}</p>
+      <p className="text-xl font-bold text-slate-100">{value}</p>
     </div>
   </div>
 );
@@ -30,7 +30,7 @@ const StatCard = ({ icon: Icon, label, value }) => (
 const StatusBadge = ({ ok, okText, pendingText }) => (
   <span
     className={`py-1 px-3 rounded-full text-xs ${
-      ok ? 'bg-green-200 text-green-600' : 'bg-yellow-200 text-yellow-700'
+      ok ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'
     }`}
   >
     {ok ? okText : pendingText}
@@ -105,7 +105,7 @@ const DashboardOverview = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Overview</h1>
-      <p className="text-gray-500 mb-6">Welcome back, {user.name}.</p>
+      <p className="text-slate-400 mb-6">Welcome back, {user.name}.</p>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -130,20 +130,20 @@ const DashboardOverview = () => {
         {isSeller ? (
           <>
             {/* Top products by revenue */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-line shadow-xl shadow-black/40 p-6">
               <h2 className="text-lg font-bold mb-4">Top Products by Revenue</h2>
               {topProducts.length === 0 ? (
-                <p className="text-gray-500 text-sm">No paid orders yet.</p>
+                <p className="text-slate-400 text-sm">No paid orders yet.</p>
               ) : (
                 topProducts.map((p) => (
                   <div key={p.name} className="mb-3 last:mb-0">
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-700 truncate mr-2">{p.name}</span>
-                      <span className="text-gray-500 font-medium shrink-0">${p.revenue.toFixed(2)}</span>
+                      <span className="text-slate-300 truncate mr-2">{p.name}</span>
+                      <span className="text-slate-400 font-medium shrink-0">${p.revenue.toFixed(2)}</span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className="w-full bg-card-2 rounded-full h-2">
                       <div
-                        className="bg-indigo-600 h-2 rounded-full"
+                        className="bg-violet-600 h-2 rounded-full"
                         style={{ width: `${(p.revenue / maxRevenue) * 100}%` }}
                       />
                     </div>
@@ -153,25 +153,25 @@ const DashboardOverview = () => {
             </div>
 
             {/* Recent orders received */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-line shadow-xl shadow-black/40 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold">Recent Orders</h2>
-                <Link to="/dashboard/orders-received" className="text-sm text-indigo-600 hover:underline">
+                <Link to="/dashboard/orders-received" className="text-sm text-violet-400 hover:underline">
                   View all
                 </Link>
               </div>
               {sellerOrders.length === 0 ? (
-                <p className="text-gray-500 text-sm">No orders yet.</p>
+                <p className="text-slate-400 text-sm">No orders yet.</p>
               ) : (
-                <ul className="divide-y divide-gray-100">
+                <ul className="divide-y divide-line">
                   {sellerOrders.slice(0, 5).map((order) => (
                     <li key={order._id} className="py-2 flex items-center justify-between text-sm">
                       <div>
-                        <p className="font-medium text-gray-800">{order.user?.name || 'Unknown'}</p>
-                        <p className="text-gray-400 text-xs">{order.createdAt.substring(0, 10)}</p>
+                        <p className="font-medium text-slate-100">{order.user?.name || 'Unknown'}</p>
+                        <p className="text-slate-500 text-xs">{order.createdAt.substring(0, 10)}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-700">${order.sellerTotal.toFixed(2)}</span>
+                        <span className="font-semibold text-slate-300">${order.sellerTotal.toFixed(2)}</span>
                         <StatusBadge ok={order.isPaid} okText="Paid" pendingText="Unpaid" />
                       </div>
                     </li>
@@ -183,27 +183,27 @@ const DashboardOverview = () => {
         ) : (
           <>
             {/* Recent orders */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-line shadow-xl shadow-black/40 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold">Recent Orders</h2>
-                <Link to="/dashboard/orders" className="text-sm text-indigo-600 hover:underline">
+                <Link to="/dashboard/orders" className="text-sm text-violet-400 hover:underline">
                   View all
                 </Link>
               </div>
               {orders.length === 0 ? (
-                <p className="text-gray-500 text-sm">
-                  No orders yet. <Link to="/" className="text-indigo-600 hover:underline">Start shopping</Link>.
+                <p className="text-slate-400 text-sm">
+                  No orders yet. <Link to="/" className="text-violet-400 hover:underline">Start shopping</Link>.
                 </p>
               ) : (
-                <ul className="divide-y divide-gray-100">
+                <ul className="divide-y divide-line">
                   {orders.slice(0, 5).map((order) => (
                     <li key={order._id} className="py-2 flex items-center justify-between text-sm">
                       <div>
-                        <p className="font-mono text-xs text-gray-500">{order._id}</p>
-                        <p className="text-gray-400 text-xs">{order.createdAt.substring(0, 10)}</p>
+                        <p className="font-mono text-xs text-slate-400">{order._id}</p>
+                        <p className="text-slate-500 text-xs">{order.createdAt.substring(0, 10)}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-700">${order.totalPrice.toFixed(2)}</span>
+                        <span className="font-semibold text-slate-300">${order.totalPrice.toFixed(2)}</span>
                         <StatusBadge ok={order.isDelivered} okText="Delivered" pendingText="In Transit" />
                       </div>
                     </li>
@@ -213,25 +213,25 @@ const DashboardOverview = () => {
             </div>
 
             {/* Recently bookmarked */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-card rounded-lg border border-line shadow-xl shadow-black/40 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold">Recently Bookmarked</h2>
-                <Link to="/dashboard/bookmarks" className="text-sm text-indigo-600 hover:underline">
+                <Link to="/dashboard/bookmarks" className="text-sm text-violet-400 hover:underline">
                   View all
                 </Link>
               </div>
               {bookmarkedProducts.length === 0 ? (
-                <p className="text-gray-500 text-sm">No bookmarks yet.</p>
+                <p className="text-slate-400 text-sm">No bookmarks yet.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {bookmarkedProducts.slice(0, 4).map((product) => (
                     <Link
                       key={product._id}
                       to={`/product/${product._id}`}
-                      className="flex items-center gap-2 border border-gray-100 rounded-lg p-2 hover:border-indigo-300 transition"
+                      className="flex items-center gap-2 border border-line rounded-lg p-2 hover:border-violet-500/60 transition"
                     >
                       <img src={product.image} alt={product.name} className="w-10 h-10 object-cover rounded" />
-                      <span className="text-sm text-gray-700 truncate">{product.name}</span>
+                      <span className="text-sm text-slate-300 truncate">{product.name}</span>
                     </Link>
                   ))}
                 </div>

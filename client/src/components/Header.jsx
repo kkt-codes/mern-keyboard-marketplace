@@ -41,12 +41,12 @@ const Header = () => {
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
         placeholder="Search keyboards..."
-        className="w-full pl-3 pr-9 py-1.5 rounded-md bg-gray-800 text-white placeholder-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full pl-3 pr-9 py-1.5 rounded-md bg-card-2 text-white placeholder-slate-500 border border-line focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
       />
       <button
         type="submit"
         aria-label="Search"
-        className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white transition"
+        className="absolute right-0 top-0 h-full px-3 text-slate-500 hover:text-white transition"
       >
         <FaSearch />
       </button>
@@ -54,7 +54,7 @@ const Header = () => {
   );
 
   return (
-    <header className="bg-gray-900 text-white">
+    <header className="sticky top-0 z-50 border-b border-line/70 bg-abyss/85 backdrop-blur-md text-white">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
@@ -75,22 +75,22 @@ const Header = () => {
           <nav className="hidden md:block">
             <ul className="flex space-x-6 items-center">
               <li>
-                <Link to="/" className="hover:text-gray-300 transition">
+                <Link to="/" className="hover:text-cyan-300 transition">
                   Home
                 </Link>
               </li>
 
               <li>
-                <Link to="/products" className="hover:text-gray-300 transition">
+                <Link to="/products" className="hover:text-cyan-300 transition">
                   Products
                 </Link>
               </li>
 
               <li>
-                <Link to="/cart" className="flex items-center hover:text-gray-300 transition relative">
+                <Link to="/cart" className="flex items-center hover:text-cyan-300 transition relative">
                   <FaShoppingCart className="mr-1" /> Cart
                   {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 bg-gradient-to-r from-violet-500 to-cyan-400 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-[0_0_10px_rgba(139,92,246,0.6)]">
                       {cartCount}
                     </span>
                   )}
@@ -100,23 +100,23 @@ const Header = () => {
               <li className="relative" ref={infoMenuRef}>
                 <button
                   onClick={() => setInfoDropdownOpen(!infoDropdownOpen)}
-                  className="flex items-center hover:text-gray-300 transition focus:outline-none"
+                  className="flex items-center hover:text-cyan-300 transition focus:outline-none"
                 >
                   Info <FaChevronDown className="ml-1 text-xs" />
                 </button>
 
                 {infoDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-10 text-gray-800">
-                    <Link to="/about" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setInfoDropdownOpen(false)}>
+                  <div className="absolute right-0 mt-2 w-40 bg-card rounded-md border border-line shadow-xl shadow-black/40 py-1 z-10 text-slate-100">
+                    <Link to="/about" className="block px-4 py-2 hover:bg-card-2" onClick={() => setInfoDropdownOpen(false)}>
                       About Us
                     </Link>
-                    <Link to="/contact" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setInfoDropdownOpen(false)}>
+                    <Link to="/contact" className="block px-4 py-2 hover:bg-card-2" onClick={() => setInfoDropdownOpen(false)}>
                       Contact
                     </Link>
-                    <Link to="/faq" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setInfoDropdownOpen(false)}>
+                    <Link to="/faq" className="block px-4 py-2 hover:bg-card-2" onClick={() => setInfoDropdownOpen(false)}>
                       FAQ
                     </Link>
-                    <Link to="/terms" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setInfoDropdownOpen(false)}>
+                    <Link to="/terms" className="block px-4 py-2 hover:bg-card-2" onClick={() => setInfoDropdownOpen(false)}>
                       Terms & Privacy
                     </Link>
                   </div>
@@ -127,30 +127,30 @@ const Header = () => {
                 <li className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center hover:text-gray-300 transition focus:outline-none"
+                    className="flex items-center hover:text-cyan-300 transition focus:outline-none"
                   >
                     <FaUser className="mr-1" /> {user.name}
                   </button>
 
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 text-gray-800">
+                    <div className="absolute right-0 mt-2 w-48 bg-card rounded-md border border-line shadow-xl shadow-black/40 py-1 z-10 text-slate-100">
                       <Link
                         to="/dashboard"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className="block px-4 py-2 hover:bg-card-2"
                         onClick={() => setDropdownOpen(false)}
                       >
                         Dashboard
                       </Link>
                       <Link
                         to="/profile"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className="block px-4 py-2 hover:bg-card-2"
                         onClick={() => setDropdownOpen(false)}
                       >
                         Profile
                       </Link>
                       <button
                         onClick={logoutHandler}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+                        className="block w-full text-left px-4 py-2 hover:bg-card-2 text-red-400"
                       >
                         <div className="flex items-center">
                           <FaSignOutAlt className="mr-2" /> Logout
@@ -161,7 +161,7 @@ const Header = () => {
                 </li>
               ) : (
                 <li>
-                  <Link to="/login" className="flex items-center hover:text-gray-300 transition">
+                  <Link to="/login" className="flex items-center hover:text-cyan-300 transition">
                     <FaUser className="mr-1" /> Sign In
                   </Link>
                 </li>
@@ -174,7 +174,7 @@ const Header = () => {
             <Link to="/cart" className="relative">
               <FaShoppingCart className="text-xl" />
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 bg-gradient-to-r from-violet-500 to-cyan-400 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-[0_0_10px_rgba(139,92,246,0.6)]">
                   {cartCount}
                 </span>
               )}
@@ -195,7 +195,7 @@ const Header = () => {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-gray-800 space-y-1">
+          <div className="md:hidden mt-4 pt-4 border-t border-line space-y-1">
             <Link to="/" className="block py-2" onClick={() => setMobileMenuOpen(false)}>
               Home
             </Link>
@@ -204,22 +204,22 @@ const Header = () => {
             </Link>
 
             <div className="py-2">
-              <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Info</p>
-              <Link to="/about" className="block py-1.5 pl-2 text-gray-200" onClick={() => setMobileMenuOpen(false)}>
+              <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">Info</p>
+              <Link to="/about" className="block py-1.5 pl-2 text-slate-300" onClick={() => setMobileMenuOpen(false)}>
                 About Us
               </Link>
-              <Link to="/contact" className="block py-1.5 pl-2 text-gray-200" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/contact" className="block py-1.5 pl-2 text-slate-300" onClick={() => setMobileMenuOpen(false)}>
                 Contact
               </Link>
-              <Link to="/faq" className="block py-1.5 pl-2 text-gray-200" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/faq" className="block py-1.5 pl-2 text-slate-300" onClick={() => setMobileMenuOpen(false)}>
                 FAQ
               </Link>
-              <Link to="/terms" className="block py-1.5 pl-2 text-gray-200" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/terms" className="block py-1.5 pl-2 text-slate-300" onClick={() => setMobileMenuOpen(false)}>
                 Terms & Privacy
               </Link>
             </div>
 
-            <div className="pt-2 border-t border-gray-800">
+            <div className="pt-2 border-t border-line">
               {user ? (
                 <>
                   <Link to="/dashboard" className="block py-2" onClick={() => setMobileMenuOpen(false)}>

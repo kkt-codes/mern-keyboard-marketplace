@@ -50,7 +50,7 @@ const MyProductsPage = () => {
   };
 
   if (loading) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
-  if (error) return <h2 className="text-center text-red-500 mt-10">{error}</h2>;
+  if (error) return <h2 className="text-center text-red-400 mt-10">{error}</h2>;
 
   return (
     <div>
@@ -58,19 +58,19 @@ const MyProductsPage = () => {
         <h1 className="text-2xl font-bold">My Products</h1>
         <Link
           to="/seller/product/new"
-          className="bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition"
+          className="btn-primary py-2 px-4"
         >
           + Add Product
         </Link>
       </div>
 
       {products.length === 0 ? (
-        <div className="bg-blue-100 text-blue-700 p-3 rounded">You haven't listed any products yet.</div>
+        <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">You haven't listed any products yet.</div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+        <div className="overflow-x-auto bg-card rounded-lg border border-line shadow-xl shadow-black/40">
           <table className="min-w-full">
             <thead>
-              <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+              <tr className="bg-card-2 text-slate-400 uppercase text-sm leading-normal">
                 <th className="py-3 px-6 text-left">Image</th>
                 <th className="py-3 px-6 text-left">Name</th>
                 <th className="py-3 px-6 text-left">Price</th>
@@ -78,9 +78,9 @@ const MyProductsPage = () => {
                 <th className="py-3 px-6 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="text-gray-600 text-sm">
+            <tbody className="text-slate-400 text-sm">
               {products.map((product) => (
-                <tr key={product._id} className="border-b border-gray-200 hover:bg-gray-50">
+                <tr key={product._id} className="border-b border-line hover:bg-card-2">
                   <td className="py-3 px-6">
                     <img src={product.image} alt={product.name} className="w-12 h-12 object-cover rounded" />
                   </td>
@@ -96,7 +96,7 @@ const MyProductsPage = () => {
                   <td className="py-3 px-6 text-center space-x-2">
                     <Link
                       to={`/seller/product/${product._id}/edit`}
-                      className="bg-indigo-500 text-white py-1 px-3 rounded text-xs hover:bg-indigo-600 transition"
+                      className="bg-violet-600 text-white py-1 px-3 rounded text-xs hover:bg-violet-500 hover:shadow-[0_0_12px_rgba(139,92,246,0.4)] transition"
                     >
                       Edit
                     </Link>
