@@ -34,16 +34,11 @@ const PlaceOrderScreen = () => {
   const placeOrderHandler = async () => {
     try {
       const { data } = await api.post('/orders', {
-        // Order.orderItems.product is a required ObjectId ref, but cart items
-        // only carry the product under `_id` (spread from the product doc) —
-        // map it across or Mongoose validation rejects the whole order.
-        orderItems: cartItems.map((item) => ({ ...item, product: item._id })),
+        // The server rebuilds names/images/prices and totals from the DB —
+        // it only needs to know which products and how many of each.
+        orderItems: cartItems.map((item) => ({ product: item._id, qty: item.qty })),
         shippingAddress,
         paymentMethod,
-        itemsPrice,
-        shippingPrice,
-        taxPrice,
-        totalPrice,
       });
 
       clearCart();

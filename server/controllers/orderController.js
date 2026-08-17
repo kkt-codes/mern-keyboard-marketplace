@@ -2,42 +2,77 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const stripe = require('../config/stripe');
 
+const round2 = (n) => Math.round(n * 100) / 100;
+
 /**
  * @desc    Create new order
  * @route   POST /api/orders
  * @access  Private
+ * @note    The client only chooses *what* to buy (product ids + quantities).
+ *          Names, images, prices, and all totals are rebuilt from the
+ *          database here — any prices sent in the request body are ignored,
+ *          so a crafted request can't buy products at made-up prices.
  */
 const addOrderItems = async (req, res) => {
     try {
-        const {
-            orderItems,
+        const { orderItems, shippingAddress, paymentMethod } = req.body;
+
+        if (!orderItems || orderItems.length === 0) {
+            return res.status(400).json({ message: 'No order items' });
+        }
+
+        const ids = orderItems.map((item) => item.product);
+        if (new Set(ids.map(String)).size !== ids.length) {
+            return res.status(400).json({ message: 'Duplicate products in order' });
+        }
+
+        const products = await Product.find({ _id: { $in: ids } });
+        const productById = new Map(products.map((p) => [p._id.toString(), p]));
+
+        const verifiedItems = [];
+        for (const item of orderItems) {
+            const product = productById.get(String(item.product));
+            if (!product) {
+                return res.status(400).json({ message: 'One of the products no longer exists' });
+            }
+
+            const qty = Number(item.qty);
+            if (!Number.isInteger(qty) || qty < 1) {
+                return res.status(400).json({ message: `Invalid quantity for ${product.name}` });
+            }
+            if (qty > product.countInStock) {
+                return res.status(400).json({
+                    message: `Only ${product.countInStock} left in stock for ${product.name}`
+                });
+            }
+
+            verifiedItems.push({
+                product: product._id,
+                name: product.name,
+                image: product.image,
+                price: product.price,
+                qty
+            });
+        }
+
+        // Same pricing rules the UI shows: free shipping over $100, 15% tax.
+        const itemsPrice = round2(verifiedItems.reduce((sum, i) => sum + i.price * i.qty, 0));
+        const shippingPrice = itemsPrice > 100 ? 0 : 10;
+        const taxPrice = round2(itemsPrice * 0.15);
+        const totalPrice = round2(itemsPrice + shippingPrice + taxPrice);
+
+        const order = new Order({
+            orderItems: verifiedItems,
+            user: req.user._id,
             shippingAddress,
             paymentMethod,
-            itemsPrice,
             taxPrice,
             shippingPrice,
             totalPrice
-        } = req.body;
+        });
 
-        if (orderItems && orderItems.length === 0) {
-            res.status(400).json({ message: 'No order items' });
-            return;
-        } else {
-            const order = new Order({
-                orderItems,
-                user: req.user._id,
-                shippingAddress,
-                paymentMethod,
-                itemsPrice,
-                taxPrice,
-                shippingPrice,
-                totalPrice
-            });
-
-            const createdOrder = await order.save();
-
-            res.status(201).json(createdOrder);
-        }
+        const createdOrder = await order.save();
+        res.status(201).json(createdOrder);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -85,6 +120,22 @@ const createCheckoutSession = async (req, res) => {
 
         if (order.isPaid) {
             return res.status(400).json({ message: 'Order is already paid' });
+        }
+
+        // Stock isn't reserved at order creation, so re-check it here —
+        // someone else may have bought the last unit since then. This
+        // narrows the oversell window to the Stripe checkout itself.
+        const products = await Product.find({
+            _id: { $in: order.orderItems.map((item) => item.product) }
+        });
+        const productById = new Map(products.map((p) => [p._id.toString(), p]));
+        for (const item of order.orderItems) {
+            const product = productById.get(item.product.toString());
+            if (!product || product.countInStock < item.qty) {
+                return res.status(400).json({
+                    message: `${item.name} no longer has enough stock to complete this order`
+                });
+            }
         }
 
         const lineItems = order.orderItems.map((item) => ({
@@ -160,6 +211,26 @@ const stripeWebhookHandler = async (req, res) => {
                 email_address: session.customer_details?.email || ''
             };
             await order.save();
+
+            // Payment is confirmed — this is the point stock actually leaves
+            // the shelf. The pipeline-style update clamps at 0 so a race
+            // between two checkouts can't drive countInStock negative.
+            await Product.bulkWrite(
+                order.orderItems.map((item) => ({
+                    updateOne: {
+                        filter: { _id: item.product },
+                        update: [
+                            {
+                                $set: {
+                                    countInStock: {
+                                        $max: [0, { $subtract: ['$countInStock', item.qty] }]
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }))
+            );
         }
     }
 

@@ -15,6 +15,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
  * /orders:
  *   post:
  *     summary: Create a new order from the current cart
+ *     description: Only product ids and quantities are taken from the request. Prices, names, images, and all totals are rebuilt from the database server-side, so client-supplied prices are ignored.
  *     tags: [Orders]
  *     security: [{ bearerAuth: [] }]
  *     requestBody:
@@ -23,24 +24,26 @@ const { protect, authorize } = require('../middleware/authMiddleware');
  *         application/json:
  *           schema:
  *             type: object
- *             required: [orderItems, shippingAddress, paymentMethod, taxPrice, shippingPrice, totalPrice]
+ *             required: [orderItems, shippingAddress, paymentMethod]
  *             properties:
  *               orderItems:
  *                 type: array
- *                 items: { $ref: '#/components/schemas/OrderItem' }
+ *                 items:
+ *                   type: object
+ *                   required: [product, qty]
+ *                   properties:
+ *                     product: { type: string, description: Product id }
+ *                     qty: { type: integer, minimum: 1 }
  *               shippingAddress: { $ref: '#/components/schemas/ShippingAddress' }
  *               paymentMethod: { type: string, example: Stripe }
- *               taxPrice: { type: number }
- *               shippingPrice: { type: number }
- *               totalPrice: { type: number }
  *     responses:
  *       201:
- *         description: The created order.
+ *         description: The created order, with server-computed prices.
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Order' }
  *       400:
- *         description: No order items provided.
+ *         description: No order items, duplicate/unknown products, invalid quantity, or insufficient stock.
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Error' }
@@ -144,7 +147,7 @@ router.route('/:id').get(protect, getOrderById);
  *               properties:
  *                 url: { type: string, format: uri }
  *       400:
- *         description: Order is already paid.
+ *         description: Order is already paid, or an item no longer has enough stock.
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Error' }
