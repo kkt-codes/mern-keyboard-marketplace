@@ -9,6 +9,7 @@ const {
     updateUserProfile
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
+const { authLimiter } = require('../middleware/rateLimiters');
 
 /**
  * @swagger
@@ -42,8 +43,13 @@ const { protect } = require('../middleware/authMiddleware');
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Error' }
+ *       429:
+ *         description: Too many attempts from this IP — rate limited.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
  */
-router.post('/register', registerUser);
+router.post('/register', authLimiter, registerUser);
 
 /**
  * @swagger
@@ -72,8 +78,13 @@ router.post('/register', registerUser);
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Error' }
+ *       429:
+ *         description: Too many attempts from this IP — rate limited.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
  */
-router.post('/login', loginUser);
+router.post('/login', authLimiter, loginUser);
 
 /**
  * @swagger

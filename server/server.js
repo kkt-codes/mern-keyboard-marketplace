@@ -6,8 +6,10 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const { apiLimiter } = require('./middleware/rateLimiters');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const connectDB = require('./config/db');
@@ -22,11 +24,22 @@ connectDB();
 
 const app = express();
 
+// Security response headers (X-Content-Type-Options, X-Frame-Options,
+// HSTS, etc.). The default Content-Security-Policy is API-appropriate and
+// still lets the same-origin Swagger UI at /api-docs load its own assets.
+app.use(helmet());
+
 // The Stripe webhook needs the raw, unparsed request body to verify the
 // signature — it must be mounted with express.raw() BEFORE the global
 // express.json() below, or that middleware would already have consumed
-// (and reformatted) the body by the time this route sees it.
+// (and reformatted) the body by the time this route sees it. It's also
+// mounted before the rate limiter: Stripe's retries authenticate via
+// signature, and dropping one with a 429 could lose a payment event.
 app.post('/api/orders/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
+
+// General per-IP rate limit for everything under /api (a stricter one for
+// login/register lives in routes/authRoutes.js).
+app.use('/api', apiLimiter);
 
 // Middleware
 app.use(express.json()); // Body parser for JSON data
