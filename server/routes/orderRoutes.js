@@ -4,6 +4,7 @@ const {
     addOrderItems,
     getOrderById,
     createCheckoutSession,
+    getAllOrders,
     getMyOrders,
     getSellerOrders,
     markOrderDelivered
@@ -47,24 +48,69 @@ const { protect, authorize } = require('../middleware/authMiddleware');
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Error' }
+ *   get:
+ *     summary: List all orders (admin)
+ *     tags: [Orders]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, default: 10 }
+ *     responses:
+ *       200:
+ *         description: One page of all orders, newest first, buyer populated.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 orders:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/Order' }
+ *                 page: { type: integer }
+ *                 pages: { type: integer }
+ *                 total: { type: integer }
+ *       403:
+ *         description: Logged in but not an admin.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
  */
-router.route('/').post(protect, addOrderItems);
+router.route('/')
+    .post(protect, addOrderItems)
+    .get(protect, authorize('admin'), getAllOrders);
 
 /**
  * @swagger
  * /orders/myorders:
  *   get:
- *     summary: List the logged-in user's own orders
+ *     summary: List the logged-in user's own orders, paginated
  *     tags: [Orders]
  *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, default: 10 }
  *     responses:
  *       200:
- *         description: Orders placed by the current user.
+ *         description: One page of the current user's orders, newest first.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items: { $ref: '#/components/schemas/Order' }
+ *               type: object
+ *               properties:
+ *                 orders:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/Order' }
+ *                 page: { type: integer }
+ *                 pages: { type: integer }
+ *                 total: { type: integer }
  */
 router.route('/myorders').get(protect, getMyOrders);
 
@@ -72,23 +118,36 @@ router.route('/myorders').get(protect, getMyOrders);
  * @swagger
  * /orders/sellerorders:
  *   get:
- *     summary: List orders containing the logged-in seller's products
+ *     summary: List orders containing the logged-in seller's products, paginated
  *     description: Requires the seller or admin role. Each order is trimmed to just this seller's line items, plus a computed sellerTotal.
  *     tags: [Orders]
  *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, default: 10 }
  *     responses:
  *       200:
- *         description: Orders touching this seller's products.
+ *         description: One page of orders touching this seller's products.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 allOf:
- *                   - $ref: '#/components/schemas/Order'
- *                   - type: object
- *                     properties:
- *                       sellerTotal: { type: number }
+ *               type: object
+ *               properties:
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Order'
+ *                       - type: object
+ *                         properties:
+ *                           sellerTotal: { type: number }
+ *                 page: { type: integer }
+ *                 pages: { type: integer }
+ *                 total: { type: integer }
  *       403:
  *         description: Logged in but not a seller/admin.
  *         content:

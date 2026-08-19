@@ -24,6 +24,9 @@ import MyOrdersPage from './pages/dashboard/MyOrdersPage';
 import MyProductsPage from './pages/dashboard/MyProductsPage';
 import OrdersReceivedPage from './pages/dashboard/OrdersReceivedPage';
 import BookmarksPage from './pages/dashboard/BookmarksPage';
+import UsersPage from './pages/dashboard/admin/UsersPage';
+import AllOrdersPage from './pages/dashboard/admin/AllOrdersPage';
+import AllProductsPage from './pages/dashboard/admin/AllProductsPage';
 
 function App() {
   return (
@@ -63,6 +66,9 @@ function App() {
               <Route path="bookmarks" element={<BookmarksPage />} />
               <Route path="products" element={<MyProductsPage />} />
               <Route path="orders-received" element={<OrdersReceivedPage />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="all-orders" element={<AllOrdersPage />} />
+              <Route path="all-products" element={<AllProductsPage />} />
             </Route>
             <Route path="/seller/product/new" element={<ProductEditScreen />} />
             <Route path="/seller/product/:id/edit" element={<ProductEditScreen />} />

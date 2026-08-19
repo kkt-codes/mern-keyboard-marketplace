@@ -237,35 +237,73 @@ const stripeWebhookHandler = async (req, res) => {
     res.status(200).json({ received: true });
 };
 
+const parsePagination = (query, defaultLimit = 10) => {
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.max(1, Number(query.limit) || defaultLimit);
+    return { page, limit, skip: (page - 1) * limit };
+};
+
 /**
- * @desc    Get logged in user orders
- * @route   GET /api/orders/myorders
- * @access  Private
+ * @desc    Get all orders, paginated
+ * @route   GET /api/orders?page=&limit=
+ * @access  Private (Admin)
  */
-const getMyOrders = async (req, res) => {
+const getAllOrders = async (req, res) => {
     try {
-        const orders = await Order.find({ user: req.user._id }).sort('-createdAt');
-        res.json(orders);
+        const { page, limit, skip } = parsePagination(req.query);
+
+        const [orders, total] = await Promise.all([
+            Order.find({}).populate('user', 'name email').sort('-createdAt').skip(skip).limit(limit),
+            Order.countDocuments({})
+        ]);
+
+        res.json({ orders, page, pages: Math.max(1, Math.ceil(total / limit)), total });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
 /**
- * @desc    Get orders containing any of the logged-in seller's products
- * @route   GET /api/orders/sellerorders
+ * @desc    Get logged in user orders, paginated
+ * @route   GET /api/orders/myorders?page=&limit=
+ * @access  Private
+ */
+const getMyOrders = async (req, res) => {
+    try {
+        const { page, limit, skip } = parsePagination(req.query);
+        const filter = { user: req.user._id };
+
+        const [orders, total] = await Promise.all([
+            Order.find(filter).sort('-createdAt').skip(skip).limit(limit),
+            Order.countDocuments(filter)
+        ]);
+
+        res.json({ orders, page, pages: Math.max(1, Math.ceil(total / limit)), total });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * @desc    Get orders containing any of the logged-in seller's products,
+ *          paginated
+ * @route   GET /api/orders/sellerorders?page=&limit=
  * @access  Private (Seller/Admin)
- * @returns {object[]} Orders trimmed to just this seller's line items, plus
- *          a computed `sellerTotal` (revenue from just those items).
+ * @returns Orders trimmed to just this seller's line items, plus a computed
+ *          `sellerTotal` (revenue from just those items).
  */
 const getSellerOrders = async (req, res) => {
     try {
+        const { page, limit, skip } = parsePagination(req.query);
+
         const myProducts = await Product.find({ user: req.user._id }).select('_id');
         const myProductIds = myProducts.map((p) => p._id.toString());
+        const filter = { 'orderItems.product': { $in: myProductIds } };
 
-        const orders = await Order.find({ 'orderItems.product': { $in: myProductIds } })
-            .populate('user', 'name email')
-            .sort('-createdAt');
+        const [orders, total] = await Promise.all([
+            Order.find(filter).populate('user', 'name email').sort('-createdAt').skip(skip).limit(limit),
+            Order.countDocuments(filter)
+        ]);
 
         const sellerOrders = orders.map((order) => {
             const sellerItems = order.orderItems.filter((item) =>
@@ -286,7 +324,7 @@ const getSellerOrders = async (req, res) => {
             };
         });
 
-        res.json(sellerOrders);
+        res.json({ orders: sellerOrders, page, pages: Math.max(1, Math.ceil(total / limit)), total });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -342,6 +380,7 @@ module.exports = {
     getOrderById,
     createCheckoutSession,
     stripeWebhookHandler,
+    getAllOrders,
     getMyOrders,
     getSellerOrders,
     markOrderDelivered

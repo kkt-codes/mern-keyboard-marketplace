@@ -47,7 +47,9 @@ const getProducts = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const [products, total] = await Promise.all([
-            Product.find(filter).sort(sort).skip(skip).limit(limit),
+            // Seller name rides along for display (marketplace listings are
+            // public anyway); email etc. stays private.
+            Product.find(filter).populate('user', 'name').sort(sort).skip(skip).limit(limit),
             Product.countDocuments(filter)
         ]);
 
@@ -63,14 +65,23 @@ const getProducts = async (req, res) => {
 };
 
 /**
- * @desc    Fetch products belonging to the logged-in seller
- * @route   GET /api/products/myproducts
+ * @desc    Fetch products belonging to the logged-in seller, paginated
+ * @route   GET /api/products/myproducts?page=&limit=
  * @access  Private (Seller/Admin)
  */
 const getMyProducts = async (req, res) => {
     try {
-        const products = await Product.find({ user: req.user._id });
-        res.json(products);
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.max(1, Number(req.query.limit) || 10);
+        const skip = (page - 1) * limit;
+        const filter = { user: req.user._id };
+
+        const [products, total] = await Promise.all([
+            Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+            Product.countDocuments(filter)
+        ]);
+
+        res.json({ products, page, pages: Math.max(1, Math.ceil(total / limit)), total });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -49,24 +49,34 @@ const DashboardOverview = () => {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [sellerOrders, setSellerOrders] = useState([]);
+  const [totals, setTotals] = useState({ orders: 0, products: 0, sellerOrders: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading || !user) return;
 
+    // These endpoints are paginated now — one big page covers the stats and
+    // previews here; headline counts come from the response `total` fields
+    // so they stay right even past the page size.
     const fetchData = async () => {
       try {
         setLoading(true);
         if (isSeller) {
           const [productsRes, sellerOrdersRes] = await Promise.all([
-            api.get('/products/myproducts'),
-            api.get('/orders/sellerorders'),
+            api.get('/products/myproducts', { params: { limit: 100 } }),
+            api.get('/orders/sellerorders', { params: { limit: 100 } }),
           ]);
-          setProducts(productsRes.data);
-          setSellerOrders(sellerOrdersRes.data);
+          setProducts(productsRes.data.products);
+          setSellerOrders(sellerOrdersRes.data.orders);
+          setTotals((t) => ({
+            ...t,
+            products: productsRes.data.total,
+            sellerOrders: sellerOrdersRes.data.total,
+          }));
         } else {
-          const { data } = await api.get('/orders/myorders');
-          setOrders(data);
+          const { data } = await api.get('/orders/myorders', { params: { limit: 100 } });
+          setOrders(data.orders);
+          setTotals((t) => ({ ...t, orders: data.total }));
         }
       } catch (err) {
         toast.error(err.response?.data?.message || 'Failed to load dashboard');
@@ -111,14 +121,14 @@ const DashboardOverview = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {isSeller ? (
           <>
-            <StatCard icon={FaBoxOpen} label="Products" value={products.length} />
-            <StatCard icon={FaShoppingBag} label="Orders Received" value={sellerOrders.length} />
+            <StatCard icon={FaBoxOpen} label="Products" value={totals.products} />
+            <StatCard icon={FaShoppingBag} label="Orders Received" value={totals.sellerOrders} />
             <StatCard icon={FaDollarSign} label="Revenue" value={`$${totalRevenue.toFixed(2)}`} />
             <StatCard icon={FaExclamationTriangle} label="Low Stock" value={lowStockCount} />
           </>
         ) : (
           <>
-            <StatCard icon={FaShoppingBag} label="Orders" value={orders.length} />
+            <StatCard icon={FaShoppingBag} label="Orders" value={totals.orders} />
             <StatCard icon={FaDollarSign} label="Total Spent" value={`$${totalSpent.toFixed(2)}`} />
             <StatCard icon={FaTruck} label="Pending Deliveries" value={pendingDeliveries} />
             <StatCard icon={FaBookmark} label="Bookmarks" value={bookmarkedProducts.length} />

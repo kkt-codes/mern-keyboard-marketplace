@@ -3,20 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
+import Pagination from '../../components/Pagination';
 
 const OrdersReceivedPage = () => {
   const { user, loading: authLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deliveringId, setDeliveringId] = useState(null);
 
   const fetchOrders = async () => {
     try {
-      const { data } = await api.get('/orders/sellerorders');
-      setOrders(data);
+      const { data } = await api.get('/orders/sellerorders', { params: { page } });
+      setOrders(data.orders);
+      setPages(data.pages);
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     } finally {
@@ -33,7 +37,7 @@ const OrdersReceivedPage = () => {
 
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user, navigate]);
+  }, [authLoading, user, navigate, page]);
 
   const deliverHandler = async (orderId) => {
     setDeliveringId(orderId);
@@ -113,6 +117,8 @@ const OrdersReceivedPage = () => {
           </table>
         </div>
       )}
+
+      <Pagination page={page} pages={pages} onPageChange={setPage} />
     </div>
   );
 };

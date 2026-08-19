@@ -88,17 +88,30 @@ router.route('/')
  * @swagger
  * /products/myproducts:
  *   get:
- *     summary: List the logged-in seller's own products
+ *     summary: List the logged-in seller's own products, paginated
  *     tags: [Products]
  *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, default: 10 }
  *     responses:
  *       200:
- *         description: Products owned by the current user.
+ *         description: One page of products owned by the current user, newest first.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items: { $ref: '#/components/schemas/Product' }
+ *               type: object
+ *               properties:
+ *                 products:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/Product' }
+ *                 page: { type: integer }
+ *                 pages: { type: integer }
+ *                 total: { type: integer }
  *       403:
  *         description: Logged in but not a seller/admin.
  *         content:

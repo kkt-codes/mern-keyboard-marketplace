@@ -9,6 +9,9 @@ import {
   FaBars,
   FaTimes,
   FaUser,
+  FaUsers,
+  FaStore,
+  FaGlobe,
   FaArrowLeft,
 } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
@@ -31,6 +34,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isSeller = user && (user.role === 'seller' || user.role === 'admin');
+  const isAdmin = user && user.role === 'admin';
 
   useEffect(() => {
     if (loading) return;
@@ -52,11 +56,17 @@ const DashboardLayout = () => {
         { to: '/dashboard/bookmarks', label: 'Bookmarks', icon: FaBookmark },
       ];
 
+  const adminItems = [
+    { to: '/dashboard/users', label: 'Users', icon: FaUsers },
+    { to: '/dashboard/all-orders', label: 'All Orders', icon: FaGlobe },
+    { to: '/dashboard/all-products', label: 'All Products', icon: FaStore },
+  ];
+
   const SidebarContent = () => (
     <>
       <div className="px-4 mb-6">
         <p className="text-xs uppercase text-slate-500 font-semibold tracking-wide">
-          {isSeller ? 'Seller' : 'Buyer'} Dashboard
+          {isAdmin ? 'Admin' : isSeller ? 'Seller' : 'Buyer'} Dashboard
         </p>
         <p className="font-semibold text-slate-100 truncate">{user.name}</p>
       </div>
@@ -67,6 +77,19 @@ const DashboardLayout = () => {
             <Icon /> {label}
           </NavLink>
         ))}
+
+        {isAdmin && (
+          <>
+            <p className="px-4 pt-4 pb-1 text-xs uppercase text-slate-500 font-semibold tracking-wide">
+              Admin
+            </p>
+            {adminItems.map(({ to, label, icon: Icon }) => (
+              <NavLink key={to} to={to} className={linkClass} onClick={() => setSidebarOpen(false)}>
+                <Icon /> {label}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
 
       <div className="px-2 pt-4 mt-4 border-t border-line space-y-1">
