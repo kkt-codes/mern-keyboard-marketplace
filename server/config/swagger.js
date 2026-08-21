@@ -104,6 +104,11 @@ const swaggerDefinition = {
                     image: { type: 'string', format: 'uri' },
                     price: { type: 'number' },
                     product: { type: 'string', description: 'ObjectId of the Product being ordered.' },
+                    isDelivered: {
+                        type: 'boolean',
+                        description: 'Tracked per item, since each seller ships only their own.',
+                    },
+                    deliveredAt: { type: 'string', format: 'date-time' },
                 },
             },
             ShippingAddress: {
@@ -129,8 +134,23 @@ const swaggerDefinition = {
                     totalPrice: { type: 'number' },
                     isPaid: { type: 'boolean' },
                     paidAt: { type: 'string', format: 'date-time' },
-                    isDelivered: { type: 'boolean' },
+                    isDelivered: {
+                        type: 'boolean',
+                        description: 'True only once every line item has been delivered.',
+                    },
                     deliveredAt: { type: 'string', format: 'date-time' },
+                    isCancelled: { type: 'boolean' },
+                    cancelledAt: { type: 'string', format: 'date-time' },
+                    cancelReason: { type: 'string' },
+                    refundResult: {
+                        type: 'object',
+                        description: 'Present when a paid order was cancelled and refunded.',
+                        properties: {
+                            id: { type: 'string', example: 're_3abc123' },
+                            amount: { type: 'number', example: 149.49 },
+                            status: { type: 'string', example: 'succeeded' },
+                        },
+                    },
                     createdAt: { type: 'string', format: 'date-time' },
                 },
             },

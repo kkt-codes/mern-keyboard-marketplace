@@ -1,18 +1,20 @@
 import { useEffect, useState, useContext, useCallback } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
 const OrderScreen = () => {
   const { id } = useParams();
-  const { user } = useContext(AuthContext);
+  const { user, loading: authLoading } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [payLoading, setPayLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -26,10 +28,16 @@ const OrderScreen = () => {
   }, [id]);
 
   useEffect(() => {
-    if (user) {
-      fetchOrder();
+    // Wait for the session to resolve, then send guests to log in — without
+    // this the page would sit on "Loading..." forever for a logged-out
+    // visitor, since the fetch below never runs.
+    if (authLoading) return;
+    if (!user) {
+      navigate(`/login?redirect=/order/${id}`);
+      return;
     }
-  }, [user, fetchOrder]);
+    fetchOrder();
+  }, [authLoading, user, id, navigate, fetchOrder]);
 
   // Stripe redirects back here with ?payment=success|canceled. The webhook
   // is what actually marks the order paid (usually already done by the time
@@ -62,13 +70,54 @@ const OrderScreen = () => {
     }
   };
 
+  const cancelHandler = async () => {
+    const reason = window.prompt(
+      order.isPaid
+        ? 'Cancel this order and refund the payment? Optionally tell us why:'
+        : 'Cancel this order? Optionally tell us why:'
+    );
+    // prompt() returns null when the dialog itself is dismissed — that's a
+    // change of heart, not an empty reason.
+    if (reason === null) return;
+
+    setCancelLoading(true);
+    try {
+      const { data } = await api.put(`/orders/${id}/cancel`, { reason });
+      setOrder(data);
+      toast.success(data.refundResult ? 'Order cancelled and refunded' : 'Order cancelled');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
   if (loading) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
   if (error) return <h2 className="text-center text-red-400 mt-10">{error}</h2>;
+
+  const formatDate = (value) => (value ? new Date(value).toLocaleString() : '');
+  const anyItemShipped = order.orderItems.some((item) => item.isDelivered);
+  const canCancel = !order.isCancelled && !anyItemShipped;
 
   return (
     <div className="container mx-auto mt-10">
       <h1 className="text-3xl font-bold mb-8">Order {order._id}</h1>
-      
+
+      {order.isCancelled && (
+        <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300">
+          <p className="font-semibold">
+            Cancelled on {formatDate(order.cancelledAt)}
+            {order.refundResult && ` — $${order.refundResult.amount.toFixed(2)} refunded`}
+          </p>
+          {order.cancelReason && <p className="mt-1 text-sm">Reason: {order.cancelReason}</p>}
+          {order.refundResult && (
+            <p className="mt-1 font-mono text-xs text-red-300/80">
+              Refund {order.refundResult.id} · {order.refundResult.status}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
           {/* Shipping Info */}
@@ -83,7 +132,13 @@ const OrderScreen = () => {
             </p>
             
             {order.isDelivered ? (
-              <div className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 p-3 rounded">Delivered on {order.deliveredAt}</div>
+              <div className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 p-3 rounded">
+                Delivered on {formatDate(order.deliveredAt)}
+              </div>
+            ) : anyItemShipped ? (
+              <div className="border border-amber-500/30 bg-amber-500/10 text-amber-300 p-3 rounded">
+                Partially delivered — some items are still on their way
+              </div>
             ) : (
               <div className="border border-red-500/30 bg-red-500/10 text-red-300 p-3 rounded">Not Delivered</div>
             )}
@@ -98,7 +153,9 @@ const OrderScreen = () => {
             </p>
             
             {order.isPaid ? (
-              <div className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 p-3 rounded">Paid on {order.paidAt}</div>
+              <div className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 p-3 rounded">
+                Paid on {formatDate(order.paidAt)}
+              </div>
             ) : (
               <div className="border border-red-500/30 bg-red-500/10 text-red-300 p-3 rounded">Not Paid</div>
             )}
@@ -112,18 +169,36 @@ const OrderScreen = () => {
             ) : (
               <div className="divide-y divide-line">
                 {order.orderItems.map((item, index) => (
-                  <div key={index} className="py-4 flex items-center justify-between">
-                    <div className="flex items-center">
+                  <div key={index} className="py-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center min-w-0">
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="w-16 h-16 object-cover rounded mr-4"
+                        className="w-16 h-16 object-cover rounded mr-4 shrink-0"
                       />
-                      <Link to={`/product/${item.product}`} className="text-violet-400 hover:underline">
-                        {item.name}
-                      </Link>
+                      <div className="min-w-0">
+                        <Link to={`/product/${item.product}`} className="text-violet-400 hover:underline">
+                          {item.name}
+                        </Link>
+                        {/* Each seller ships their own items, so status lives per line. */}
+                        <div className="mt-1">
+                          {item.isDelivered ? (
+                            <span className="bg-emerald-500/15 text-emerald-300 py-0.5 px-2 rounded-full text-xs">
+                              Delivered {formatDate(item.deliveredAt).split(',')[0]}
+                            </span>
+                          ) : order.isCancelled ? (
+                            <span className="bg-red-500/15 text-red-300 py-0.5 px-2 rounded-full text-xs">
+                              Cancelled
+                            </span>
+                          ) : (
+                            <span className="bg-amber-500/15 text-amber-300 py-0.5 px-2 rounded-full text-xs">
+                              Pending
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-slate-300">
+                    <div className="text-slate-300 shrink-0">
                       {item.qty} x ${item.price} = ${(item.qty * item.price).toFixed(2)}
                     </div>
                   </div>
@@ -160,7 +235,14 @@ const OrderScreen = () => {
               <span>${order.totalPrice.toFixed(2)}</span>
             </div>
             
-            {!order.isPaid && (
+            {order.refundResult && (
+              <div className="flex justify-between mb-4 text-sm text-red-300">
+                <span>Refunded</span>
+                <span>-${order.refundResult.amount.toFixed(2)}</span>
+              </div>
+            )}
+
+            {!order.isPaid && !order.isCancelled && (
                <button
                  onClick={payHandler}
                  disabled={payLoading}
@@ -168,6 +250,16 @@ const OrderScreen = () => {
                >
                  {payLoading ? 'Redirecting to Stripe...' : 'Pay with Stripe'}
                </button>
+            )}
+
+            {canCancel && (
+              <button
+                onClick={cancelHandler}
+                disabled={cancelLoading}
+                className="w-full mt-2 py-2.5 px-4 rounded-lg border border-red-500/40 text-red-300 font-medium transition hover:bg-red-500/10 disabled:opacity-50"
+              >
+                {cancelLoading ? 'Cancelling...' : order.isPaid ? 'Cancel & Refund' : 'Cancel Order'}
+              </button>
             )}
           </div>
         </div>

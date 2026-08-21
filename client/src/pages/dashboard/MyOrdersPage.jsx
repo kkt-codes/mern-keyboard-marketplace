@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaTimes } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 import Pagination from '../../components/Pagination';
@@ -14,6 +15,7 @@ const MyOrdersPage = () => {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -36,6 +38,26 @@ const MyOrdersPage = () => {
 
     fetchOrders();
   }, [authLoading, user, navigate, page]);
+
+  const cancelHandler = async (order) => {
+    const reason = window.prompt(
+      order.isPaid
+        ? 'Cancel this order and refund the payment? Optionally tell us why:'
+        : 'Cancel this order? Optionally tell us why:'
+    );
+    if (reason === null) return;
+
+    setCancellingId(order._id);
+    try {
+      const { data } = await api.put(`/orders/${order._id}/cancel`, { reason });
+      toast.success(data.refundResult ? 'Order cancelled and refunded' : 'Order cancelled');
+      setOrders((prev) => prev.map((o) => (o._id === order._id ? { ...o, ...data } : o)));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   if (loading) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
   if (error) return <h2 className="text-center text-red-400 mt-10">{error}</h2>;
@@ -82,23 +104,36 @@ const MyOrdersPage = () => {
                     )}
                   </td>
                   <td className="py-3 px-6 text-center">
-                    {order.isDelivered ? (
+                    {order.isCancelled ? (
+                      <span className="bg-red-500/15 text-red-300 py-1 px-3 rounded-full text-xs">Cancelled</span>
+                    ) : order.isDelivered ? (
                       <span className="bg-emerald-500/15 text-emerald-300 py-1 px-3 rounded-full text-xs">
                         {order.deliveredAt.substring(0, 10)}
                       </span>
+                    ) : order.orderItems.some((item) => item.isDelivered) ? (
+                      <span className="bg-amber-500/15 text-amber-300 py-1 px-3 rounded-full text-xs">Partial</span>
                     ) : (
                       <span className="bg-red-500/15 text-red-300 py-1 px-3 rounded-full text-xs">
                         <FaTimes />
                       </span>
                     )}
                   </td>
-                  <td className="py-3 px-6 text-center">
+                  <td className="py-3 px-6 text-center space-x-2 whitespace-nowrap">
                     <Link
                       to={`/order/${order._id}`}
                       className="bg-violet-600 text-white py-1 px-3 rounded text-xs hover:bg-violet-500 hover:shadow-[0_0_12px_rgba(139,92,246,0.4)] transition"
                     >
                       Details
                     </Link>
+                    {!order.isCancelled && !order.orderItems.some((item) => item.isDelivered) && (
+                      <button
+                        onClick={() => cancelHandler(order)}
+                        disabled={cancellingId === order._id}
+                        className="border border-red-500/40 text-red-300 py-1 px-3 rounded text-xs hover:bg-red-500/10 transition disabled:opacity-50"
+                      >
+                        {cancellingId === order._id ? '...' : 'Cancel'}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

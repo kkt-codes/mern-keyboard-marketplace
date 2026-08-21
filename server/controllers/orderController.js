@@ -122,6 +122,10 @@ const createCheckoutSession = async (req, res) => {
             return res.status(400).json({ message: 'Order is already paid' });
         }
 
+        if (order.isCancelled) {
+            return res.status(400).json({ message: 'Order has been cancelled' });
+        }
+
         // Stock isn't reserved at order creation, so re-check it here —
         // someone else may have bought the last unit since then. This
         // narrows the oversell window to the Stripe checkout itself.
@@ -201,7 +205,10 @@ const stripeWebhookHandler = async (req, res) => {
         const session = event.data.object;
         const order = await Order.findById(session.metadata.orderId);
 
-        if (order && !order.isPaid) {
+        // A cancelled order is skipped rather than marked paid — otherwise a
+        // session started before cancellation could quietly resurrect it and
+        // decrement stock for something nobody is going to ship.
+        if (order && !order.isPaid && !order.isCancelled) {
             order.isPaid = true;
             order.paidAt = Date.now();
             order.paymentResult = {
@@ -290,7 +297,10 @@ const getMyOrders = async (req, res) => {
  * @route   GET /api/orders/sellerorders?page=&limit=
  * @access  Private (Seller/Admin)
  * @returns Orders trimmed to just this seller's line items, plus a computed
- *          `sellerTotal` (revenue from just those items).
+ *          `sellerTotal` (revenue from just those items) and
+ *          `sellerDelivered` (whether *this seller's* items have shipped,
+ *          which is what they can actually control — the order-level
+ *          isDelivered also waits on other sellers).
  */
 const getSellerOrders = async (req, res) => {
     try {
@@ -316,10 +326,13 @@ const getSellerOrders = async (req, res) => {
                 user: order.user,
                 orderItems: sellerItems,
                 sellerTotal,
+                sellerDelivered: sellerItems.every((item) => item.isDelivered),
                 isPaid: order.isPaid,
                 paidAt: order.paidAt,
                 isDelivered: order.isDelivered,
                 deliveredAt: order.deliveredAt,
+                isCancelled: order.isCancelled,
+                cancelledAt: order.cancelledAt,
                 createdAt: order.createdAt,
             };
         });
@@ -331,14 +344,13 @@ const getSellerOrders = async (req, res) => {
 };
 
 /**
- * @desc    Mark an order as delivered
+ * @desc    Mark this seller's items in an order as delivered
  * @route   PUT /api/orders/:id/deliver
  * @access  Private (Seller/Admin — must own at least one item in the order)
- * @note    Delivery status is a single flag on the whole order, not tracked
- *          per seller/item, so any seller with a stake in a multi-seller
- *          order can mark the entire thing delivered. Splitting that out
- *          would need a schema change (per-line-item delivery status) this
- *          app doesn't have.
+ * @note    A seller only ships their own line items, so this marks just
+ *          those. Admins act for everyone and mark whatever is still
+ *          outstanding. The order-level isDelivered flag flips only once
+ *          every item has shipped.
  */
 const markOrderDelivered = async (req, res) => {
     try {
@@ -347,28 +359,115 @@ const markOrderDelivered = async (req, res) => {
             return res.status(404).json({ message: 'Order not found' });
         }
 
-        if (req.user.role !== 'admin') {
+        // Admins can fulfil the whole order; sellers only their own items.
+        let myItems;
+        if (req.user.role === 'admin') {
+            myItems = order.orderItems;
+        } else {
             const myProducts = await Product.find({ user: req.user._id }).select('_id');
             const myProductIds = myProducts.map((p) => p._id.toString());
-            const ownsAnItem = order.orderItems.some((item) => myProductIds.includes(item.product.toString()));
+            myItems = order.orderItems.filter((item) => myProductIds.includes(item.product.toString()));
 
-            if (!ownsAnItem) {
+            if (myItems.length === 0) {
                 return res.status(401).json({ message: 'Not authorized to update this order' });
             }
+        }
+
+        if (order.isCancelled) {
+            return res.status(400).json({ message: 'Order has been cancelled' });
         }
 
         if (!order.isPaid) {
             return res.status(400).json({ message: 'Order must be paid before it can be marked delivered' });
         }
 
-        if (order.isDelivered) {
-            return res.status(400).json({ message: 'Order is already marked delivered' });
+        const pendingItems = myItems.filter((item) => !item.isDelivered);
+        if (pendingItems.length === 0) {
+            return res.status(400).json({ message: 'Your items are already marked delivered' });
         }
 
-        order.isDelivered = true;
-        order.deliveredAt = Date.now();
-        const updatedOrder = await order.save();
+        const now = Date.now();
+        pendingItems.forEach((item) => {
+            item.isDelivered = true;
+            item.deliveredAt = now;
+        });
 
+        // The order counts as delivered only when nothing is outstanding.
+        if (order.orderItems.every((item) => item.isDelivered)) {
+            order.isDelivered = true;
+            order.deliveredAt = now;
+        }
+
+        const updatedOrder = await order.save();
+        res.json(updatedOrder);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * @desc    Cancel an order, refunding it through Stripe if it was paid
+ * @route   PUT /api/orders/:id/cancel
+ * @access  Private (the order's buyer, or an admin)
+ * @note    Refunding restores the stock that was decremented when the
+ *          payment landed. Once anything has shipped the order is no longer
+ *          cancellable here — that becomes a returns problem, which this app
+ *          deliberately doesn't model.
+ */
+const cancelOrder = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        const isOwner = order.user.toString() === req.user._id.toString();
+        if (!isOwner && req.user.role !== 'admin') {
+            return res.status(401).json({ message: 'Not authorized to cancel this order' });
+        }
+
+        if (order.isCancelled) {
+            return res.status(400).json({ message: 'Order is already cancelled' });
+        }
+
+        if (order.orderItems.some((item) => item.isDelivered)) {
+            return res.status(400).json({ message: 'Items in this order have already shipped and cannot be cancelled' });
+        }
+
+        // Refund first: if Stripe rejects it, the order stays open rather
+        // than being cancelled with the buyer's money still taken.
+        if (order.isPaid) {
+            if (!order.paymentResult?.id) {
+                return res.status(400).json({ message: 'No payment reference on file to refund' });
+            }
+
+            const refund = await stripe.refunds.create({
+                payment_intent: order.paymentResult.id,
+                reason: 'requested_by_customer'
+            });
+
+            order.refundResult = {
+                id: refund.id,
+                amount: refund.amount / 100,
+                status: refund.status
+            };
+
+            // Put the stock back that the webhook took when it was paid.
+            await Product.bulkWrite(
+                order.orderItems.map((item) => ({
+                    updateOne: {
+                        filter: { _id: item.product },
+                        update: { $inc: { countInStock: item.qty } }
+                    }
+                }))
+            );
+        }
+
+        order.isCancelled = true;
+        order.cancelledAt = Date.now();
+        order.cancelReason = (req.body?.reason || '').trim() || undefined;
+
+        const updatedOrder = await order.save();
         res.json(updatedOrder);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -383,5 +482,6 @@ module.exports = {
     getAllOrders,
     getMyOrders,
     getSellerOrders,
-    markOrderDelivered
+    markOrderDelivered,
+    cancelOrder
 };

@@ -43,9 +43,11 @@ const OrdersReceivedPage = () => {
     setDeliveringId(orderId);
     try {
       await api.put(`/orders/${orderId}/deliver`);
-      toast.success('Order marked as delivered');
+      toast.success('Your items are marked as delivered');
+      // Only this seller's items shipped — the order as a whole may still be
+      // waiting on another seller, so just flip the seller-scoped flag.
       setOrders((prev) =>
-        prev.map((order) => (order._id === orderId ? { ...order, isDelivered: true } : order))
+        prev.map((order) => (order._id === orderId ? { ...order, sellerDelivered: true } : order))
       );
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update delivery status');
@@ -74,7 +76,7 @@ const OrdersReceivedPage = () => {
                 <th className="py-3 px-6 text-left">Items</th>
                 <th className="py-3 px-6 text-left">Total</th>
                 <th className="py-3 px-6 text-center">Paid</th>
-                <th className="py-3 px-6 text-center">Delivered</th>
+                <th className="py-3 px-6 text-center">Your Items</th>
                 <th className="py-3 px-6 text-center">Actions</th>
               </tr>
             </thead>
@@ -94,14 +96,16 @@ const OrdersReceivedPage = () => {
                     )}
                   </td>
                   <td className="py-3 px-6 text-center">
-                    {order.isDelivered ? (
+                    {order.isCancelled ? (
+                      <span className="bg-red-500/15 text-red-300 py-1 px-3 rounded-full text-xs">Cancelled</span>
+                    ) : order.sellerDelivered ? (
                       <span className="bg-emerald-500/15 text-emerald-300 py-1 px-3 rounded-full text-xs">Delivered</span>
                     ) : (
                       <span className="bg-amber-500/15 text-amber-300 py-1 px-3 rounded-full text-xs">Pending</span>
                     )}
                   </td>
                   <td className="py-3 px-6 text-center">
-                    {order.isPaid && !order.isDelivered && (
+                    {order.isPaid && !order.sellerDelivered && !order.isCancelled && (
                       <button
                         onClick={() => deliverHandler(order._id)}
                         disabled={deliveringId === order._id}

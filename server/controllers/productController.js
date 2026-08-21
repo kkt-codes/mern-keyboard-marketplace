@@ -172,10 +172,13 @@ const createProductReview = async (req, res) => {
             return res.status(400).json({ message: 'You have already reviewed this product' });
         }
 
-        // Only someone with a paid order containing this product may review it.
+        // Only someone with a paid, non-cancelled order containing this
+        // product may review it — a refunded purchase shouldn't earn a
+        // verified review.
         const hasPurchased = await Order.exists({
             user: req.user._id,
             isPaid: true,
+            isCancelled: { $ne: true },
             'orderItems.product': product._id
         });
         if (!hasPurchased) {

@@ -7,7 +7,8 @@ const {
     getAllOrders,
     getMyOrders,
     getSellerOrders,
-    markOrderDelivered
+    markOrderDelivered,
+    cancelOrder
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -227,8 +228,8 @@ router.route('/:id/create-checkout-session').post(protect, createCheckoutSession
  * @swagger
  * /orders/{id}/deliver:
  *   put:
- *     summary: Mark an order as delivered
- *     description: Requires the seller or admin role. Sellers must own at least one item in the order, and the order must already be paid.
+ *     summary: Mark this seller's items in an order as delivered
+ *     description: Requires the seller or admin role, and the order must already be paid. A seller marks only their own line items; admins mark everything still outstanding. The order-level isDelivered flag flips once every item has shipped.
  *     tags: [Orders]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
@@ -238,12 +239,12 @@ router.route('/:id/create-checkout-session').post(protect, createCheckoutSession
  *         schema: { type: string }
  *     responses:
  *       200:
- *         description: The updated, now-delivered order.
+ *         description: The updated order, with this seller's items delivered.
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Order' }
  *       400:
- *         description: Order isn't paid yet, or is already marked delivered.
+ *         description: Order isn't paid, was cancelled, or your items are already delivered.
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Error' }
@@ -264,5 +265,49 @@ router.route('/:id/create-checkout-session').post(protect, createCheckoutSession
  *             schema: { $ref: '#/components/schemas/Error' }
  */
 router.route('/:id/deliver').put(protect, authorize('seller', 'admin'), markOrderDelivered);
+
+/**
+ * @swagger
+ * /orders/{id}/cancel:
+ *   put:
+ *     summary: Cancel an order, refunding it if already paid
+ *     description: Open to the order's own buyer or an admin. A paid order is refunded through Stripe and its stock restored. Once any item has shipped the order can no longer be cancelled.
+ *     tags: [Orders]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason: { type: string, example: Ordered the wrong switches }
+ *     responses:
+ *       200:
+ *         description: The cancelled order, including refundResult when a refund was issued.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Order' }
+ *       400:
+ *         description: Already cancelled, items already shipped, or no payment reference to refund.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       401:
+ *         description: Logged in, but this isn't your order.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       404:
+ *         description: Order not found.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
+router.route('/:id/cancel').put(protect, cancelOrder);
 
 module.exports = router;

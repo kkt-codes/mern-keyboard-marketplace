@@ -16,7 +16,12 @@ const orderSchema = mongoose.Schema({
                 type: mongoose.Schema.Types.ObjectId,
                 required: true,
                 ref: 'Product'
-            }
+            },
+            // Delivery is tracked per line item because one order can span
+            // several sellers, and each only controls their own items. The
+            // order-level isDelivered below is derived from these.
+            isDelivered: { type: Boolean, required: true, default: false },
+            deliveredAt: { type: Date }
         }
     ],
     shippingAddress: {
@@ -58,6 +63,9 @@ const orderSchema = mongoose.Schema({
     paidAt: {
         type: Date
     },
+    // Derived: true only once every line item has been delivered. Kept as a
+    // stored field so buyer-facing lists can filter/display without having
+    // to walk orderItems on every read.
     isDelivered: {
         type: Boolean,
         required: true,
@@ -65,6 +73,23 @@ const orderSchema = mongoose.Schema({
     },
     deliveredAt: {
         type: Date
+    },
+    isCancelled: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    cancelledAt: {
+        type: Date
+    },
+    cancelReason: {
+        type: String
+    },
+    // Populated when a paid order is cancelled and Stripe refunds it.
+    refundResult: {
+        id: { type: String },
+        amount: { type: Number },
+        status: { type: String }
     }
 }, {
     timestamps: true
