@@ -18,6 +18,7 @@ const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const userRoutes = require('./routes/userRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 const { stripeWebhookHandler } = require('./controllers/orderController');
 
 // Connect to Database
@@ -58,6 +59,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/cart', cartRoutes);
 
 // API docs, generated from the @swagger JSDoc blocks in ./routes/*.js
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

@@ -35,6 +35,24 @@ const userSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product'
         }
+    ],
+    // Only the product reference and quantity are stored. Names, images and
+    // prices are read from the Product on every fetch, so a cart left sitting
+    // for a week can never check out at a stale price.
+    cart: [
+        {
+            _id: false,
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Product',
+                required: true
+            },
+            qty: {
+                type: Number,
+                required: true,
+                min: 1
+            }
+        }
     ]
 }, {
     timestamps: true // Automatically adds createdAt and updatedAt fields
