@@ -30,6 +30,14 @@ const userSchema = new mongoose.Schema({
         enum: ['buyer', 'seller', 'admin'],
         default: 'buyer'
     },
+    // Stamped into every access/refresh token at signing time. Bumping this
+    // makes every token issued before the bump fail verification — the only
+    // way to revoke a JWT that's otherwise valid by its own signature and
+    // expiry alone, since nothing else is checked against the database.
+    tokenVersion: {
+        type: Number,
+        default: 0
+    },
     bookmarks: [
         {
             type: mongoose.Schema.Types.ObjectId,

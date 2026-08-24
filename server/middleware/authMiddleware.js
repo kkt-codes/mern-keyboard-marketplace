@@ -15,6 +15,13 @@ const protect = async (req, res, next) => {
 
             req.user = await User.findById(decoded.id).select('-password');
 
+            // No user (deleted account) or a stale tokenVersion (password
+            // change / "log out other devices" happened since this access
+            // token was issued) — either way, this token no longer counts.
+            if (!req.user || decoded.tokenVersion !== req.user.tokenVersion) {
+                return res.status(401).json({ message: 'Session expired, please log in again' });
+            }
+
             next();
         } catch (error) {
             console.error(error);

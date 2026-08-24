@@ -61,8 +61,23 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // Password changes and "log out other devices" revoke every session by
+  // bumping the account's tokenVersion server-side, then hand back a fresh
+  // accessToken so the session making that request isn't logged out too.
+  // Without this, the next silent refresh would fail since its old refresh
+  // token cookie now carries a stale version.
+  const updateAccessToken = (accessToken) => {
+    setAccessToken(accessToken);
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, accessToken };
+      localStorage.setItem('userInfo', JSON.stringify(next));
+      return next;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, updateUser, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, updateUser, updateAccessToken, loading }}>
       {children}
     </AuthContext.Provider>
   );

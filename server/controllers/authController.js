@@ -36,7 +36,7 @@ const registerUser = async (req, res) => {
             // The "Why": We now separate token generation.
             // The `generateTokens` utility handles creating BOTH tokens
             // and crucially, it sets the httpOnly refresh token cookie on the `res` object.
-            const accessToken = generateTokens(res, user._id);
+            const accessToken = generateTokens(res, user._id, user.tokenVersion);
 
             // The "Why": This is our Data Transfer Object (DTO).
             // We are explicitly controlling what data is sent to the client.
@@ -62,7 +62,7 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ email }).select('+password');
 
         if (user && (await user.matchPassword(password))) {
-            const accessToken = generateTokens(res, user._id);
+            const accessToken = generateTokens(res, user._id, user.tokenVersion);
             res.status(200).json(toUserDTO(user, accessToken));
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
@@ -111,10 +111,17 @@ const refreshAccessToken = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        // A password change or "log out other devices" bumps tokenVersion,
+        // which makes every refresh token issued before that moment stale —
+        // this is the only way to revoke a JWT that's self-verifying otherwise.
+        if (decoded.tokenVersion !== user.tokenVersion) {
+            return res.status(401).json({ message: 'Session expired, please log in again' });
+        }
+
         // The "Why": If the refresh token is valid, we issue a NEW access token,
         // but we do NOT issue a new refresh token. The existing one remains valid
         // until its original expiry.
-        const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        const accessToken = jwt.sign({ id: user._id, tokenVersion: user.tokenVersion }, process.env.JWT_SECRET, {
             expiresIn: '15m',
         });
 
@@ -195,6 +202,80 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Change the logged-in user's password
+ * @route   PUT /api/auth/password
+ * @access  Private
+ * @note    Doesn't revoke other sessions — refresh tokens are stateless JWTs
+ *          with no server-side session store to invalidate, so one issued
+ *          before this change stays valid until it naturally expires (7d).
+ */
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Current and new password are required' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'New password must be at least 6 characters' });
+        }
+
+        // select('+password') is required — the schema excludes it by default.
+        const user = await User.findById(req.user._id).select('+password');
+
+        if (!(await user.matchPassword(currentPassword))) {
+            return res.status(401).json({ message: 'Current password is incorrect' });
+        }
+
+        if (currentPassword === newPassword) {
+            return res.status(400).json({ message: 'New password must be different from the current one' });
+        }
+
+        // Plain assignment — the pre-save hook hashes it because
+        // isModified('password') is true, same as registration.
+        user.password = newPassword;
+
+        // Changing your password is the moment you'd most want any stolen
+        // session killed, so bump tokenVersion in the same save — every
+        // refresh token issued before now (on any device) stops working.
+        user.tokenVersion += 1;
+        await user.save();
+
+        // Without this, the request that just changed the password would
+        // itself be logged out next time its own token needed refreshing.
+        const accessToken = generateTokens(res, user._id, user.tokenVersion);
+
+        res.json({ message: 'Password updated', accessToken });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * @desc    Revoke every session except the one making this request
+ * @route   POST /api/auth/logout-others
+ * @access  Private
+ * @note    Same tokenVersion-bump mechanism as changePassword, offered on
+ *          its own for "I think someone else is logged into my account"
+ *          without needing to also change the password.
+ */
+const logoutOtherSessions = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+
+        user.tokenVersion += 1;
+        await user.save();
+
+        const accessToken = generateTokens(res, user._id, user.tokenVersion);
+
+        res.json({ message: 'Logged out of all other sessions', accessToken });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -202,4 +283,6 @@ module.exports = {
     refreshAccessToken,
     getUserProfile,
     updateUserProfile,
+    changePassword,
+    logoutOtherSessions,
 };

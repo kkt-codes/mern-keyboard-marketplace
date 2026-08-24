@@ -6,7 +6,9 @@ const {
     logoutUser,
     refreshAccessToken,
     getUserProfile,
-    updateUserProfile
+    updateUserProfile,
+    changePassword,
+    logoutOtherSessions
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const { authLimiter } = require('../middleware/rateLimiters');
@@ -115,7 +117,7 @@ router.post('/logout', logoutUser);
  *               properties:
  *                 accessToken: { type: string }
  *       401:
- *         description: Missing, invalid, or expired refresh token.
+ *         description: Missing, invalid, or expired refresh token — including one revoked by a password change or "log out other devices" elsewhere.
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Error' }
@@ -172,5 +174,77 @@ router.get('/profile', protect, getUserProfile);
  *             schema: { $ref: '#/components/schemas/Error' }
  */
 router.put('/profile', protect, updateUserProfile);
+
+/**
+ * @swagger
+ * /auth/password:
+ *   put:
+ *     summary: Change the logged-in user's password
+ *     description: Also revokes every other session by bumping the account's tokenVersion — every refresh token issued before this call stops working. A fresh accessToken is returned so the caller's own session keeps working.
+ *     tags: [Auth]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [currentPassword, newPassword]
+ *             properties:
+ *               currentPassword: { type: string, format: password }
+ *               newPassword: { type: string, format: password, minLength: 6 }
+ *     responses:
+ *       200:
+ *         description: Password updated. Store the returned accessToken in place of the old one.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 accessToken: { type: string }
+ *       400:
+ *         description: Missing fields, new password too short, or same as the current one.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       401:
+ *         description: Current password is incorrect.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       429:
+ *         description: Too many attempts from this IP — rate limited.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
+router.put('/password', authLimiter, protect, changePassword);
+
+/**
+ * @swagger
+ * /auth/logout-others:
+ *   post:
+ *     summary: Revoke every session except the one making this request
+ *     description: Bumps the account's tokenVersion, the same mechanism as changing your password, for when you suspect another device is logged in but don't want to change your password. A fresh accessToken is returned so the caller's own session keeps working.
+ *     tags: [Auth]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Other sessions revoked. Store the returned accessToken in place of the old one.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 accessToken: { type: string }
+ *       429:
+ *         description: Too many attempts from this IP — rate limited.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ */
+router.post('/logout-others', authLimiter, protect, logoutOtherSessions);
 
 module.exports = router;

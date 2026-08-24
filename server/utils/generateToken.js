@@ -4,18 +4,21 @@ const jwt = require('jsonwebtoken');
  * Generates JWT Access and Refresh Tokens and sets the refresh token in an HTTP-Only cookie.
  * @param {object} res - The Express response object.
  * @param {string} userId - The ID of the user to embed in the tokens.
+ * @param {number} tokenVersion - The user's current tokenVersion, stamped into
+ *        both tokens so they can be collectively revoked later by bumping it
+ *        (password change, "log out other devices") without a session store.
  * @returns {string} The generated Access Token.
  */
-const generateTokens = (res, userId) => {
+const generateTokens = (res, userId, tokenVersion) => {
     // 1. The "How": Generate the short-lived Access Token (15 minutes)
     // This is what the client will use for authenticating API requests.
-    const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    const accessToken = jwt.sign({ id: userId, tokenVersion }, process.env.JWT_SECRET, {
         expiresIn: '15m',
     });
 
     // 2. The "How": Generate the long-lived Refresh Token (7 days)
     // This token's only purpose is to get a new access token.
-    const refreshToken = jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, {
+    const refreshToken = jwt.sign({ id: userId, tokenVersion }, process.env.JWT_REFRESH_SECRET, {
         expiresIn: '7d',
     });
 
