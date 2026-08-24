@@ -16,6 +16,8 @@ const MyOrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
+  const [keyword, setKeyword] = useState('');
+  const [status, setStatus] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -26,7 +28,7 @@ const MyOrdersPage = () => {
 
     const fetchOrders = async () => {
       try {
-        const { data } = await api.get('/orders/myorders', { params: { page } });
+        const { data } = await api.get('/orders/myorders', { params: { page, keyword, status } });
         setOrders(data.orders);
         setPages(data.pages);
       } catch (err) {
@@ -37,7 +39,16 @@ const MyOrdersPage = () => {
     };
 
     fetchOrders();
-  }, [authLoading, user, navigate, page]);
+  }, [authLoading, user, navigate, page, keyword, status]);
+
+  const keywordChangeHandler = (e) => {
+    setKeyword(e.target.value);
+    setPage(1);
+  };
+  const statusChangeHandler = (e) => {
+    setStatus(e.target.value);
+    setPage(1);
+  };
 
   const cancelHandler = async (order) => {
     const reason = window.prompt(
@@ -66,12 +77,40 @@ const MyOrdersPage = () => {
     <div>
       <h1 className="text-2xl font-bold mb-6">My Orders</h1>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <input
+          type="text"
+          value={keyword}
+          onChange={keywordChangeHandler}
+          placeholder="Search by product name..."
+          className="flex-1 px-3 py-2 border border-line rounded text-sm"
+        />
+        <select
+          value={status}
+          onChange={statusChangeHandler}
+          className="border border-line rounded px-3 py-2 text-sm"
+        >
+          <option value="">All statuses</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
+          <option value="pending">Pending delivery</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
       {orders.length === 0 ? (
         <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">
-          You have no orders.{' '}
-          <Link to="/" className="underline font-bold">
-            Start Shopping
-          </Link>
+          {keyword || status ? (
+            'No orders match your filters.'
+          ) : (
+            <>
+              You have no orders.{' '}
+              <Link to="/" className="underline font-bold">
+                Start Shopping
+              </Link>
+            </>
+          )}
         </div>
       ) : (
         <div className="overflow-x-auto bg-card rounded-lg border border-line shadow-xl shadow-black/40">

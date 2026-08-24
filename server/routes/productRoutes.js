@@ -98,6 +98,14 @@ router.route('/')
  *       - in: query
  *         name: limit
  *         schema: { type: integer, minimum: 1, default: 10 }
+ *       - in: query
+ *         name: keyword
+ *         description: Case-insensitive match against the product name.
+ *         schema: { type: string }
+ *       - in: query
+ *         name: lowStock
+ *         description: Set to "true" to only show products below the low-stock threshold.
+ *         schema: { type: string, enum: ['true'] }
  *     responses:
  *       200:
  *         description: One page of products owned by the current user, newest first.

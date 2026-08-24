@@ -17,6 +17,8 @@ const AllOrdersPage = () => {
   const [error, setError] = useState(null);
   const [deliveringId, setDeliveringId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
+  const [keyword, setKeyword] = useState('');
+  const [status, setStatus] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -27,7 +29,7 @@ const AllOrdersPage = () => {
 
     const fetchOrders = async () => {
       try {
-        const { data } = await api.get('/orders', { params: { page } });
+        const { data } = await api.get('/orders', { params: { page, keyword, status } });
         setOrders(data.orders);
         setPages(data.pages);
         setTotal(data.total);
@@ -39,7 +41,16 @@ const AllOrdersPage = () => {
     };
 
     fetchOrders();
-  }, [authLoading, user, navigate, page]);
+  }, [authLoading, user, navigate, page, keyword, status]);
+
+  const keywordChangeHandler = (e) => {
+    setKeyword(e.target.value);
+    setPage(1);
+  };
+  const statusChangeHandler = (e) => {
+    setStatus(e.target.value);
+    setPage(1);
+  };
 
   const deliverHandler = async (orderId) => {
     setDeliveringId(orderId);
@@ -86,8 +97,30 @@ const AllOrdersPage = () => {
         <span className="font-mono text-sm text-slate-400">{total} total</span>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <input
+          type="text"
+          value={keyword}
+          onChange={keywordChangeHandler}
+          placeholder="Search by buyer name or email..."
+          className="flex-1 px-3 py-2 border border-line rounded text-sm"
+        />
+        <select
+          value={status}
+          onChange={statusChangeHandler}
+          className="border border-line rounded px-3 py-2 text-sm"
+        >
+          <option value="">All statuses</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
+          <option value="pending">Pending delivery</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
       {orders.length === 0 ? (
-        <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">No orders yet.</div>
+        <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">No orders match your filters.</div>
       ) : (
         <div className="overflow-x-auto bg-card rounded-lg border border-line shadow-xl shadow-black/40">
           <table className="min-w-full">

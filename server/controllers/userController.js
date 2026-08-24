@@ -1,20 +1,34 @@
 const User = require('../models/User');
 const Product = require('../models/Product');
+const sendError = require('../utils/sendError');
+const escapeRegex = require('../utils/escapeRegex');
 
 /**
- * @desc    List all users, paginated
- * @route   GET /api/users?page=&limit=
+ * @desc    List all users, optionally filtered by keyword (name/email) and
+ *          role, paginated
+ * @route   GET /api/users?page=&limit=&keyword=&role=
  * @access  Private (Admin)
  */
 const getUsers = async (req, res) => {
     try {
+        const filter = {};
+
+        if (req.query.keyword) {
+            const pattern = { $regex: escapeRegex(req.query.keyword), $options: 'i' };
+            filter.$or = [{ name: pattern }, { email: pattern }];
+        }
+
+        if (req.query.role) {
+            filter.role = req.query.role;
+        }
+
         const page = Math.max(1, Number(req.query.page) || 1);
         const limit = Math.max(1, Number(req.query.limit) || 10);
         const skip = (page - 1) * limit;
 
         const [users, total] = await Promise.all([
-            User.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit),
-            User.countDocuments({})
+            User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+            User.countDocuments(filter)
         ]);
 
         res.json({
@@ -24,7 +38,7 @@ const getUsers = async (req, res) => {
             total
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -58,7 +72,7 @@ const updateUserRole = async (req, res) => {
 
         res.json({ _id: user._id, name: user.name, email: user.email, role: user.role });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -91,7 +105,7 @@ const deleteUser = async (req, res) => {
 
         res.json({ message: 'User removed' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 

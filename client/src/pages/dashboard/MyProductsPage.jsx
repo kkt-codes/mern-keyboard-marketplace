@@ -16,11 +16,15 @@ const MyProductsPage = () => {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [keyword, setKeyword] = useState('');
+  const [lowStockOnly, setLowStockOnly] = useState(false);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/products/myproducts', { params: { page } });
+      const { data } = await api.get('/products/myproducts', {
+        params: { page, keyword, lowStock: lowStockOnly || undefined },
+      });
       setProducts(data.products);
       setPages(data.pages);
       setError(null);
@@ -39,7 +43,16 @@ const MyProductsPage = () => {
     }
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user, navigate, page]);
+  }, [authLoading, user, navigate, page, keyword, lowStockOnly]);
+
+  const keywordChangeHandler = (e) => {
+    setKeyword(e.target.value);
+    setPage(1);
+  };
+  const lowStockChangeHandler = (e) => {
+    setLowStockOnly(e.target.checked);
+    setPage(1);
+  };
 
   const deleteHandler = async (productId) => {
     if (!window.confirm('Delete this product? This cannot be undone.')) return;
@@ -69,8 +82,29 @@ const MyProductsPage = () => {
         </Link>
       </div>
 
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+        <input
+          type="text"
+          value={keyword}
+          onChange={keywordChangeHandler}
+          placeholder="Search by product name..."
+          className="flex-1 px-3 py-2 border border-line rounded text-sm"
+        />
+        <label className="flex items-center gap-2 text-sm text-slate-300 whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={lowStockOnly}
+            onChange={lowStockChangeHandler}
+            className="accent-violet-600"
+          />
+          Low stock only
+        </label>
+      </div>
+
       {products.length === 0 ? (
-        <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">You haven't listed any products yet.</div>
+        <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">
+          {keyword || lowStockOnly ? 'No products match your filters.' : "You haven't listed any products yet."}
+        </div>
       ) : (
         <div className="overflow-x-auto bg-card rounded-lg border border-line shadow-xl shadow-black/40">
           <table className="min-w-full">

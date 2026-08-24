@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const generateTokens = require('../utils/generateToken');
+const sendError = require('../utils/sendError');
 
 // DTO for User Response
 const toUserDTO = (user, accessToken) => ({
@@ -46,7 +47,7 @@ const registerUser = async (req, res) => {
             res.status(400).json({ message: 'Invalid user data' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -68,7 +69,7 @@ const loginUser = async (req, res) => {
             res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -157,7 +158,7 @@ const getUserProfile = async (req, res) => {
             res.status(404).json({ message: 'User not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -198,7 +199,7 @@ const updateUserProfile = async (req, res) => {
             createdAt: updatedUser.createdAt,
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -249,7 +250,7 @@ const changePassword = async (req, res) => {
 
         res.json({ message: 'Password updated', accessToken });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -272,7 +273,7 @@ const logoutOtherSessions = async (req, res) => {
 
         res.json({ message: 'Logged out of all other sessions', accessToken });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 

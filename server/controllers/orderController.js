@@ -1,6 +1,9 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const User = require('../models/User');
 const stripe = require('../config/stripe');
+const sendError = require('../utils/sendError');
+const escapeRegex = require('../utils/escapeRegex');
 
 const round2 = (n) => Math.round(n * 100) / 100;
 
@@ -143,7 +146,7 @@ const addOrderItems = async (req, res) => {
         const createdOrder = await order.save();
         res.status(201).json(createdOrder);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -165,7 +168,7 @@ const getOrderById = async (req, res) => {
             res.status(404).json({ message: 'Order not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -264,7 +267,7 @@ const createCheckoutSession = async (req, res) => {
 
         res.json({ url: session.url });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -356,34 +359,71 @@ const parsePagination = (query, defaultLimit = 10) => {
 };
 
 /**
- * @desc    Get all orders, paginated
- * @route   GET /api/orders?page=&limit=
+ * Translates a `status` query param into the stored boolean flags it means.
+ * "pending" specifically means paid-but-not-yet-shipped, matching the badge
+ * these tables already render — an order that's merely unpaid isn't
+ * "pending" in that sense, it's "unpaid".
+ * @param {string} status
+ * @returns {object} A Mongo filter fragment, or {} for an unrecognised/empty status.
+ */
+const ORDER_STATUS_FILTERS = {
+    paid: { isPaid: true, isCancelled: { $ne: true } },
+    unpaid: { isPaid: false, isCancelled: { $ne: true } },
+    delivered: { isDelivered: true },
+    pending: { isPaid: true, isDelivered: false, isCancelled: { $ne: true } },
+    cancelled: { isCancelled: true }
+};
+
+/**
+ * @desc    Get all orders, optionally filtered by buyer keyword and status,
+ *          paginated
+ * @route   GET /api/orders?page=&limit=&keyword=&status=
  * @access  Private (Admin)
  */
 const getAllOrders = async (req, res) => {
     try {
+        const filter = { ...(ORDER_STATUS_FILTERS[req.query.status] || {}) };
+
+        // Order documents don't carry the buyer's name/email themselves, so
+        // a keyword search has to resolve to User ids first, then filter
+        // orders by that set — a plain Order.find() can't regex-match a
+        // field that only exists on the populated ref.
+        if (req.query.keyword) {
+            const pattern = { $regex: escapeRegex(req.query.keyword), $options: 'i' };
+            const matchingUsers = await User.find({ $or: [{ name: pattern }, { email: pattern }] }).select('_id');
+            filter.user = { $in: matchingUsers.map((u) => u._id) };
+        }
+
         const { page, limit, skip } = parsePagination(req.query);
 
         const [orders, total] = await Promise.all([
-            Order.find({}).populate('user', 'name email').sort('-createdAt').skip(skip).limit(limit),
-            Order.countDocuments({})
+            Order.find(filter).populate('user', 'name email').sort('-createdAt').skip(skip).limit(limit),
+            Order.countDocuments(filter)
         ]);
 
         res.json({ orders, page, pages: Math.max(1, Math.ceil(total / limit)), total });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
 /**
- * @desc    Get logged in user orders, paginated
- * @route   GET /api/orders/myorders?page=&limit=
+ * @desc    Get logged in user orders, optionally filtered by status and a
+ *          product-name keyword, paginated
+ * @route   GET /api/orders/myorders?page=&limit=&keyword=&status=
  * @access  Private
  */
 const getMyOrders = async (req, res) => {
     try {
+        const filter = { user: req.user._id, ...(ORDER_STATUS_FILTERS[req.query.status] || {}) };
+
+        // Mongo treats a dotted path into an array of subdocuments as "any
+        // element matches" — no $elemMatch needed for a single-field check.
+        if (req.query.keyword) {
+            filter['orderItems.name'] = { $regex: escapeRegex(req.query.keyword), $options: 'i' };
+        }
+
         const { page, limit, skip } = parsePagination(req.query);
-        const filter = { user: req.user._id };
 
         const [orders, total] = await Promise.all([
             Order.find(filter).sort('-createdAt').skip(skip).limit(limit),
@@ -392,7 +432,7 @@ const getMyOrders = async (req, res) => {
 
         res.json({ orders, page, pages: Math.max(1, Math.ceil(total / limit)), total });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -444,7 +484,7 @@ const getSellerOrders = async (req, res) => {
 
         res.json({ orders: sellerOrders, page, pages: Math.max(1, Math.ceil(total / limit)), total });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -506,7 +546,7 @@ const markOrderDelivered = async (req, res) => {
         const updatedOrder = await order.save();
         res.json(updatedOrder);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -579,7 +619,7 @@ const cancelOrder = async (req, res) => {
         const updatedOrder = await order.save();
         res.json(updatedOrder);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 

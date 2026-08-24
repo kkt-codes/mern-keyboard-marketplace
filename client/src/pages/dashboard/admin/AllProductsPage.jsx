@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { AuthContext } from '../../../context/AuthContext';
 import Pagination from '../../../components/Pagination';
+import { CATEGORIES } from '../../../constants/categories';
 
 /**
  * Catalog moderation: every product on the marketplace regardless of
@@ -20,10 +21,12 @@ const AllProductsPage = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [keyword, setKeyword] = useState('');
+  const [category, setCategory] = useState('');
 
   const fetchProducts = async () => {
     try {
-      const { data } = await api.get('/products', { params: { page, limit: 10 } });
+      const { data } = await api.get('/products', { params: { page, limit: 10, keyword, category } });
       setProducts(data.products);
       setPages(data.pages);
       setTotal(data.total);
@@ -43,7 +46,16 @@ const AllProductsPage = () => {
     }
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user, navigate, page]);
+  }, [authLoading, user, navigate, page, keyword, category]);
+
+  const keywordChangeHandler = (e) => {
+    setKeyword(e.target.value);
+    setPage(1);
+  };
+  const categoryChangeHandler = (e) => {
+    setCategory(e.target.value);
+    setPage(1);
+  };
 
   const deleteHandler = async (productId, name) => {
     if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
@@ -67,8 +79,28 @@ const AllProductsPage = () => {
         <span className="font-mono text-sm text-slate-400">{total} total</span>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <input
+          type="text"
+          value={keyword}
+          onChange={keywordChangeHandler}
+          placeholder="Search by product name..."
+          className="flex-1 px-3 py-2 border border-line rounded text-sm"
+        />
+        <select
+          value={category}
+          onChange={categoryChangeHandler}
+          className="border border-line rounded px-3 py-2 text-sm"
+        >
+          <option value="">All categories</option>
+          {CATEGORIES.map(({ label }) => (
+            <option key={label} value={label}>{label}</option>
+          ))}
+        </select>
+      </div>
+
       {products.length === 0 ? (
-        <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">No products listed.</div>
+        <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">No products match your filters.</div>
       ) : (
         <div className="overflow-x-auto bg-card rounded-lg border border-line shadow-xl shadow-black/40">
           <table className="min-w-full">

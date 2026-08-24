@@ -1,4 +1,5 @@
 const cloudinary = require('../config/cloudinary');
+const sendError = require('../utils/sendError');
 
 /**
  * @desc    Upload a product image to Cloudinary
@@ -29,7 +30,7 @@ const uploadImage = async (req, res) => {
 
         res.status(201).json({ url: result.secure_url });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 

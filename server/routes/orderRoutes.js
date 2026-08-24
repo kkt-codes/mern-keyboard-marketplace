@@ -60,6 +60,13 @@ const { protect, authorize } = require('../middleware/authMiddleware');
  *       - in: query
  *         name: limit
  *         schema: { type: integer, minimum: 1, default: 10 }
+ *       - in: query
+ *         name: keyword
+ *         description: Case-insensitive match against the buyer's name or email.
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [paid, unpaid, delivered, pending, cancelled] }
  *     responses:
  *       200:
  *         description: One page of all orders, newest first, buyer populated.
@@ -98,6 +105,13 @@ router.route('/')
  *       - in: query
  *         name: limit
  *         schema: { type: integer, minimum: 1, default: 10 }
+ *       - in: query
+ *         name: keyword
+ *         description: Case-insensitive match against any ordered product's name.
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [paid, unpaid, delivered, pending, cancelled] }
  *     responses:
  *       200:
  *         description: One page of the current user's orders, newest first.

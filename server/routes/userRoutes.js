@@ -20,6 +20,13 @@ router.use(protect, authorize('admin'));
  *       - in: query
  *         name: limit
  *         schema: { type: integer, minimum: 1, default: 10 }
+ *       - in: query
+ *         name: keyword
+ *         description: Case-insensitive match against name or email.
+ *         schema: { type: string }
+ *       - in: query
+ *         name: role
+ *         schema: { type: string, enum: [buyer, seller, admin] }
  *     responses:
  *       200:
  *         description: One page of users, newest first.

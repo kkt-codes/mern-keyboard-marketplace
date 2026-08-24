@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Product = require('../models/Product');
+const sendError = require('../utils/sendError');
 
 /**
  * Turns stored `{ product, qty }` refs into the full product objects the
@@ -89,7 +90,7 @@ const getCart = async (req, res) => {
 
         res.json(items);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -112,7 +113,7 @@ const replaceCart = async (req, res) => {
 
         res.json(items);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -147,7 +148,7 @@ const mergeCart = async (req, res) => {
 
         res.json(items);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 

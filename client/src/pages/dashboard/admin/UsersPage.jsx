@@ -22,10 +22,12 @@ const UsersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [keyword, setKeyword] = useState('');
+  const [role, setRole] = useState('');
 
   const fetchUsers = async () => {
     try {
-      const { data } = await api.get('/users', { params: { page } });
+      const { data } = await api.get('/users', { params: { page, keyword, role } });
       setUsers(data.users);
       setPages(data.pages);
       setTotal(data.total);
@@ -45,7 +47,18 @@ const UsersPage = () => {
     }
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, me, navigate, page]);
+  }, [authLoading, me, navigate, page, keyword, role]);
+
+  // Any filter change starts back at page 1 — a stale page number from a
+  // wider result set could otherwise land past the end of a narrower one.
+  const keywordChangeHandler = (e) => {
+    setKeyword(e.target.value);
+    setPage(1);
+  };
+  const roleChangeHandler = (e) => {
+    setRole(e.target.value);
+    setPage(1);
+  };
 
   const roleHandler = async (userId, role) => {
     setBusyId(userId);
@@ -85,6 +98,31 @@ const UsersPage = () => {
         <span className="font-mono text-sm text-slate-400">{total} total</span>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <input
+          type="text"
+          value={keyword}
+          onChange={keywordChangeHandler}
+          placeholder="Search by name or email..."
+          className="flex-1 px-3 py-2 border border-line rounded text-sm"
+        />
+        <select
+          value={role}
+          onChange={roleChangeHandler}
+          className="border border-line rounded px-3 py-2 text-sm"
+        >
+          <option value="">All roles</option>
+          <option value="buyer">Buyer</option>
+          <option value="seller">Seller</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+
+      {users.length === 0 ? (
+        <div className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 p-3 rounded">
+          No users match your search.
+        </div>
+      ) : (
       <div className="overflow-x-auto bg-card rounded-lg border border-line shadow-xl shadow-black/40">
         <table className="min-w-full">
           <thead>
@@ -140,6 +178,7 @@ const UsersPage = () => {
           </tbody>
         </table>
       </div>
+      )}
 
       <Pagination page={page} pages={pages} onPageChange={setPage} />
     </div>

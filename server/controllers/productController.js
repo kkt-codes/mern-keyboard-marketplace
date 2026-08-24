@@ -1,15 +1,8 @@
 const Product = require('../models/Product');
 const User = require('../models/User');
 const Order = require('../models/Order');
-
-/**
- * Escapes regex metacharacters in user-supplied search input.
- * Without this, a keyword like `.*` or `(a+)+` passed straight into
- * `$regex` could match everything or cause catastrophic backtracking (ReDoS).
- * @param {string} text
- * @returns {string}
- */
-const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const sendError = require('../utils/sendError');
+const escapeRegex = require('../utils/escapeRegex');
 
 const SORT_OPTIONS = {
     newest: { createdAt: -1 },
@@ -60,21 +53,36 @@ const getProducts = async (req, res) => {
             total
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
+// Matches the threshold MyProductsPage already uses to highlight low stock
+// in orange — kept in sync manually since it's a display/filter convention,
+// not a stored field.
+const LOW_STOCK_THRESHOLD = 5;
+
 /**
- * @desc    Fetch products belonging to the logged-in seller, paginated
- * @route   GET /api/products/myproducts?page=&limit=
+ * @desc    Fetch products belonging to the logged-in seller, optionally
+ *          filtered by keyword and low-stock, paginated
+ * @route   GET /api/products/myproducts?page=&limit=&keyword=&lowStock=
  * @access  Private (Seller/Admin)
  */
 const getMyProducts = async (req, res) => {
     try {
+        const filter = { user: req.user._id };
+
+        if (req.query.keyword) {
+            filter.name = { $regex: escapeRegex(req.query.keyword), $options: 'i' };
+        }
+
+        if (req.query.lowStock === 'true') {
+            filter.countInStock = { $lt: LOW_STOCK_THRESHOLD };
+        }
+
         const page = Math.max(1, Number(req.query.page) || 1);
         const limit = Math.max(1, Number(req.query.limit) || 10);
         const skip = (page - 1) * limit;
-        const filter = { user: req.user._id };
 
         const [products, total] = await Promise.all([
             Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
@@ -83,7 +91,7 @@ const getMyProducts = async (req, res) => {
 
         res.json({ products, page, pages: Math.max(1, Math.ceil(total / limit)), total });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -97,7 +105,7 @@ const getMyBookmarks = async (req, res) => {
         const user = await User.findById(req.user._id).populate('bookmarks');
         res.json(user.bookmarks);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -128,7 +136,7 @@ const toggleBookmark = async (req, res) => {
         await user.save();
         res.json({ bookmarked });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -147,7 +155,7 @@ const getProductById = async (req, res) => {
             res.status(404).json({ message: 'Product not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -200,7 +208,7 @@ const createProductReview = async (req, res) => {
         await product.save();
         res.status(201).json(product);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -227,7 +235,7 @@ const createProduct = async (req, res) => {
         const createdProduct = await product.save();
         res.status(201).json(createdProduct);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -262,7 +270,7 @@ const updateProduct = async (req, res) => {
             res.status(404).json({ message: 'Product not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
@@ -287,7 +295,7 @@ const deleteProduct = async (req, res) => {
             res.status(404).json({ message: 'Product not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        sendError(res, error);
     }
 };
 
