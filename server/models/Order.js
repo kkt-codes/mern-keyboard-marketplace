@@ -74,6 +74,21 @@ const orderSchema = mongoose.Schema({
     deliveredAt: {
         type: Date
     },
+    // The Stripe Checkout session currently open for this order, kept so it
+    // can be voided if the order is cancelled — otherwise the buyer could
+    // still pay on a page we've already stopped honouring.
+    checkoutSessionId: {
+        type: String
+    },
+    // True while this order is physically holding inventory. Stock is taken
+    // when checkout starts (not when payment lands), so it can't be sold to
+    // someone else while the buyer is on Stripe's payment page. Released if
+    // the session expires or the order is cancelled/refunded.
+    stockReserved: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     isCancelled: {
         type: Boolean,
         required: true,

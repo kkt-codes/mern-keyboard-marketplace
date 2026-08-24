@@ -15,6 +15,7 @@ const OrderScreen = () => {
   const [error, setError] = useState(null);
   const [payLoading, setPayLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState(null);
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -59,11 +60,33 @@ const OrderScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Coming back from Stripe with the browser's Back button restores this page
+  // from the back/forward cache with its old state, which would leave the pay
+  // button stuck mid-redirect. Reset it and refetch, since the order may have
+  // been paid in the meantime.
+  useEffect(() => {
+    const handleRestore = (event) => {
+      if (!event.persisted) return;
+      setPayLoading(false);
+      fetchOrder();
+    };
+
+    window.addEventListener('pageshow', handleRestore);
+    return () => window.removeEventListener('pageshow', handleRestore);
+  }, [fetchOrder]);
+
   const payHandler = async () => {
     setPayLoading(true);
     try {
       const { data } = await api.post(`/orders/${id}/create-checkout-session`);
+      setCheckoutUrl(data.url);
       window.location.href = data.url;
+
+      // Normally the line above ends this page. If it doesn't — an extension
+      // or network policy blocking the redirect is the usual reason — hand
+      // control back rather than leaving a dead button, and surface the link
+      // so the payment can still be completed manually.
+      setTimeout(() => setPayLoading(false), 4000);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to start checkout');
       setPayLoading(false);
@@ -243,20 +266,33 @@ const OrderScreen = () => {
             )}
 
             {!order.isPaid && !order.isCancelled && (
-               <button
-                 onClick={payHandler}
-                 disabled={payLoading}
-                 className="btn-primary w-full py-2.5 px-4"
-               >
-                 {payLoading ? 'Redirecting to Stripe...' : 'Pay with Stripe'}
-               </button>
+              <>
+                <button
+                  onClick={payHandler}
+                  disabled={payLoading}
+                  className="btn-primary w-full py-2.5 px-4"
+                >
+                  {payLoading ? 'Redirecting to Stripe...' : 'Pay with Stripe'}
+                </button>
+
+                {checkoutUrl && !payLoading && (
+                  <p className="mt-2 text-xs text-slate-400 text-center">
+                    Didn&apos;t get taken to Stripe?{' '}
+                    <a href={checkoutUrl} className="text-violet-400 hover:underline">
+                      Open the payment page
+                    </a>
+                  </p>
+                )}
+              </>
             )}
 
             {canCancel && (
               <button
                 onClick={cancelHandler}
-                disabled={cancelLoading}
-                className="w-full mt-2 py-2.5 px-4 rounded-lg border border-red-500/40 text-red-300 font-medium transition hover:bg-red-500/10 disabled:opacity-50"
+                // Blocked mid-redirect: cancelling with a checkout page about
+                // to open invites paying for an order that's already gone.
+                disabled={cancelLoading || payLoading}
+                className="w-full mt-2 py-2.5 px-4 rounded-lg border border-red-500/40 text-red-300 font-medium transition hover:bg-red-500/10 disabled:opacity-50 disabled:hover:bg-transparent"
               >
                 {cancelLoading ? 'Cancelling...' : order.isPaid ? 'Cancel & Refund' : 'Cancel Order'}
               </button>

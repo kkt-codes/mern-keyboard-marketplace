@@ -139,6 +139,11 @@ const swaggerDefinition = {
                         description: 'True only once every line item has been delivered.',
                     },
                     deliveredAt: { type: 'string', format: 'date-time' },
+                    stockReserved: {
+                        type: 'boolean',
+                        description:
+                            'True while this order is holding inventory. Stock is taken when checkout starts, and released if the session expires or the order is cancelled.',
+                    },
                     isCancelled: { type: 'boolean' },
                     cancelledAt: { type: 'string', format: 'date-time' },
                     cancelReason: { type: 'string' },

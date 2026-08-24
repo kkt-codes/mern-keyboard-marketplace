@@ -189,7 +189,7 @@ router.route('/:id').get(protect, getOrderById);
  * /orders/{id}/create-checkout-session:
  *   post:
  *     summary: Start a Stripe Checkout session to pay for an order
- *     description: Only the order's own buyer can start this, and only if the order isn't already paid. The order isn't actually marked paid until Stripe confirms via webhook, not from this response.
+ *     description: Only the order's own buyer can start this, and only if the order isn't already paid. Stock is reserved here, before the buyer is sent to Stripe, so nobody else can buy the same units while they pay; it is released if the session expires or the order is cancelled. The order isn't marked paid until Stripe confirms via webhook, not from this response.
  *     tags: [Orders]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
@@ -207,7 +207,7 @@ router.route('/:id').get(protect, getOrderById);
  *               properties:
  *                 url: { type: string, format: uri }
  *       400:
- *         description: Order is already paid, or an item no longer has enough stock.
+ *         description: Order is already paid, was cancelled, or an item sold out before the reservation could be taken.
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Error' }
