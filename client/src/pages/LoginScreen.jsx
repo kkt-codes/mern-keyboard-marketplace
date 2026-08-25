@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { safeRedirect } from '../utils/safeRedirect';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -9,9 +10,14 @@ const LoginScreen = () => {
 
   const { login, user } = useContext(AuthContext);
   const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-  const redirect = location.search ? location.search.split('=')[1] : '/';
+  const redirect = safeRedirect(searchParams.get('redirect'));
+
+  // Carry the destination across to Register, encoded so paths containing
+  // `&` or `?` survive the round trip.
+  const registerLink =
+    redirect === '/' ? '/register' : `/register?redirect=${encodeURIComponent(redirect)}`;
 
   useEffect(() => {
     if (user) {
@@ -77,7 +83,7 @@ const LoginScreen = () => {
         <div className="mt-4 text-center">
           <p className="text-sm text-slate-400">
             New Customer?{' '}
-            <Link to={redirect ? `/register?redirect=${redirect}` : '/register'} className="text-violet-400 hover:underline">
+            <Link to={registerLink} className="text-violet-400 hover:underline">
               Register
             </Link>
           </p>
