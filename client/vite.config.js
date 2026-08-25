@@ -17,4 +17,12 @@ export default defineConfig({
       },
     },
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setup.js',
+    // Tailwind's Vite plugin has nothing to contribute to assertions, and
+    // processing it for every test file only slows the run down.
+    css: false,
+  },
 })

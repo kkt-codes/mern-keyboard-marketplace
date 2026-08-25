@@ -6,7 +6,13 @@ const options = (max, message) => ({
     max,
     standardHeaders: true, // RateLimit-* response headers
     legacyHeaders: false, // no X-RateLimit-*
-    message: { message }
+    message: { message },
+    // A test suite makes hundreds of requests from a single address and
+    // would start collecting 429s partway through. Skipping here rather
+    // than omitting the middleware means the app is wired identically in
+    // every environment — the limiter is still mounted, it just doesn't
+    // count while testing.
+    skip: () => process.env.NODE_ENV === 'test'
 });
 
 /**
