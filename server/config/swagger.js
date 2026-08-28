@@ -1,3 +1,4 @@
+const path = require('path');
 const swaggerJSDoc = require('swagger-jsdoc');
 
 /**
@@ -171,7 +172,11 @@ const swaggerDefinition = {
 
 const swaggerSpec = swaggerJSDoc({
     swaggerDefinition,
-    apis: ['./routes/*.js'],
+    // Resolved from this file rather than the working directory: swagger-jsdoc
+    // globs relative to process.cwd(), so a relative path here silently yields
+    // an empty spec whenever the process is started from anywhere but
+    // server/ — which is exactly what `node server/server.js` does.
+    apis: [path.join(__dirname, '..', 'routes', '*.js')],
 });
 
 module.exports = swaggerSpec;

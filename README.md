@@ -104,6 +104,7 @@ mern-keyboard-marketplace/
    ```env
    NODE_ENV=development
    PORT=5000
+   TRUST_PROXY=0
    MONGO_URI=mongodb://localhost:27017/mern-keyboard-marketplace
    JWT_SECRET=<random secret>
    JWT_REFRESH_SECRET=<a different random secret>
