@@ -1,7 +1,7 @@
 import { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaCcStripe } from 'react-icons/fa';
-import { CartContext } from '../context/CartContext';
+import { CartContext } from '../context/contexts';
 
 /**
  * Stripe is the only real payment method this app processes, so this step

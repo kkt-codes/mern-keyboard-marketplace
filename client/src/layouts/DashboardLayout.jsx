@@ -14,7 +14,61 @@ import {
   FaGlobe,
   FaArrowLeft,
 } from 'react-icons/fa';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/contexts';
+
+/**
+ * The sidebar's contents, rendered in both the mobile drawer and the desktop
+ * column.
+ *
+ * At module scope rather than inside DashboardLayout: a component created
+ * during render is a new type on every render, so React tears down and
+ * rebuilds this whole subtree instead of updating it — losing any DOM state
+ * inside it and doing needless work on every parent update.
+ */
+const SidebarContent = ({ user, isAdmin, isSeller, navItems, adminItems, onNavigate }) => (
+  <>
+    <div className="px-4 mb-6">
+      <p className="text-xs uppercase text-slate-500 font-semibold tracking-wide">
+        {isAdmin ? 'Admin' : isSeller ? 'Seller' : 'Buyer'} Dashboard
+      </p>
+      <p className="font-semibold text-slate-100 truncate">{user.name}</p>
+    </div>
+
+    <nav className="space-y-1 px-2 flex-1">
+      {navItems.map(({ to, label, icon: Icon, end }) => (
+        <NavLink key={to} to={to} end={end} className={linkClass} onClick={onNavigate}>
+          <Icon /> {label}
+        </NavLink>
+      ))}
+
+      {isAdmin && (
+        <>
+          <p className="px-4 pt-4 pb-1 text-xs uppercase text-slate-500 font-semibold tracking-wide">
+            Admin
+          </p>
+          {adminItems.map(({ to, label, icon: Icon }) => (
+            <NavLink key={to} to={to} className={linkClass} onClick={onNavigate}>
+              <Icon /> {label}
+            </NavLink>
+          ))}
+        </>
+      )}
+    </nav>
+
+    <div className="px-2 pt-4 mt-4 border-t border-line space-y-1">
+      <NavLink to="/profile" className={linkClass} onClick={onNavigate}>
+        <FaUser /> Profile
+      </NavLink>
+      <Link
+        to="/"
+        className="flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-slate-400 hover:bg-card-2 transition"
+        onClick={onNavigate}
+      >
+        <FaArrowLeft /> Back to Store
+      </Link>
+    </div>
+  </>
+);
 
 const linkClass = ({ isActive }) =>
   `flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition ${
@@ -62,50 +116,6 @@ const DashboardLayout = () => {
     { to: '/dashboard/all-products', label: 'All Products', icon: FaStore },
   ];
 
-  const SidebarContent = () => (
-    <>
-      <div className="px-4 mb-6">
-        <p className="text-xs uppercase text-slate-500 font-semibold tracking-wide">
-          {isAdmin ? 'Admin' : isSeller ? 'Seller' : 'Buyer'} Dashboard
-        </p>
-        <p className="font-semibold text-slate-100 truncate">{user.name}</p>
-      </div>
-
-      <nav className="space-y-1 px-2 flex-1">
-        {navItems.map(({ to, label, icon: Icon, end }) => (
-          <NavLink key={to} to={to} end={end} className={linkClass} onClick={() => setSidebarOpen(false)}>
-            <Icon /> {label}
-          </NavLink>
-        ))}
-
-        {isAdmin && (
-          <>
-            <p className="px-4 pt-4 pb-1 text-xs uppercase text-slate-500 font-semibold tracking-wide">
-              Admin
-            </p>
-            {adminItems.map(({ to, label, icon: Icon }) => (
-              <NavLink key={to} to={to} className={linkClass} onClick={() => setSidebarOpen(false)}>
-                <Icon /> {label}
-              </NavLink>
-            ))}
-          </>
-        )}
-      </nav>
-
-      <div className="px-2 pt-4 mt-4 border-t border-line space-y-1">
-        <NavLink to="/profile" className={linkClass} onClick={() => setSidebarOpen(false)}>
-          <FaUser /> Profile
-        </NavLink>
-        <Link
-          to="/"
-          className="flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-slate-400 hover:bg-card-2 transition"
-          onClick={() => setSidebarOpen(false)}
-        >
-          <FaArrowLeft /> Back to Store
-        </Link>
-      </div>
-    </>
-  );
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
@@ -129,14 +139,28 @@ const DashboardLayout = () => {
             >
               <FaTimes className="text-xl" />
             </button>
-            <SidebarContent />
+            <SidebarContent
+              user={user}
+              isAdmin={isAdmin}
+              isSeller={isSeller}
+              navItems={navItems}
+              adminItems={adminItems}
+              onNavigate={() => setSidebarOpen(false)}
+            />
           </aside>
         </div>
       )}
 
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col md:w-64 shrink-0 bg-card rounded-lg border border-line shadow-xl shadow-black/40 py-6 self-start sticky top-24">
-        <SidebarContent />
+        <SidebarContent
+              user={user}
+              isAdmin={isAdmin}
+              isSeller={isSeller}
+              navItems={navItems}
+              adminItems={adminItems}
+              onNavigate={() => setSidebarOpen(false)}
+            />
       </aside>
 
       {/* Section content */}

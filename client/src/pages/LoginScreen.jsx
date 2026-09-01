@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/contexts';
 import { safeRedirect } from '../utils/safeRedirect';
 
 const LoginScreen = () => {

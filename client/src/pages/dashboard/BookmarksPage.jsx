@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { BookmarkContext } from '../../context/BookmarkContext';
+import { BookmarkContext } from '../../context/contexts';
 import Product from '../../components/Product';
 
 /**

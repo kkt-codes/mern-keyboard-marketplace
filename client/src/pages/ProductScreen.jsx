@@ -3,8 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { FaStar } from 'react-icons/fa';
-import { CartContext } from '../context/CartContext';
-import { AuthContext } from '../context/AuthContext';
+import { CartContext } from '../context/contexts';
+import { AuthContext } from '../context/contexts';
 import BookmarkButton from '../components/BookmarkButton';
 import Rating from '../components/Rating';
 

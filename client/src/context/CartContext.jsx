@@ -1,9 +1,7 @@
-import { createContext, useState, useEffect, useContext, useRef } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
-import { AuthContext } from './AuthContext';
-
-export const CartContext = createContext();
+import { CartContext, AuthContext } from './contexts';
 
 const GUEST_CART_KEY = 'guestCart';
 
@@ -63,6 +61,13 @@ export const CartProvider = ({ children }) => {
       // Logged out: the cart belonged to that account, so nothing should be
       // left behind for whoever uses this browser next. Shipping details go
       // too — they're the previous user's personal data.
+      //
+      // Resetting on an identity change is the point of this effect. The
+      // rule's alternative is remounting the provider via a `key`, which
+      // would mean restructuring the tree around the very logic that keeps
+      // one account's cart from reaching another. One extra render on logout
+      // is the cheaper trade.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCartItems([]);
       setShippingAddress({});
       setPaymentMethod('Stripe');
@@ -163,5 +168,3 @@ export const CartProvider = ({ children }) => {
     </CartContext.Provider>
   );
 };
-
-export default CartContext;

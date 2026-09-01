@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/contexts';
 
 const ROLE_STYLES = {
   buyer: 'border border-cyan-500/30 bg-cyan-500/10 text-cyan-200',

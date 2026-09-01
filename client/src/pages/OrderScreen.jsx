@@ -2,7 +2,7 @@ import { useEffect, useState, useContext, useCallback } from 'react';
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/contexts';
 import DemoPaymentNotice from '../components/DemoPaymentNotice';
 
 const OrderScreen = () => {

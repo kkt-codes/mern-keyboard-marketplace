@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaTrash, FaShoppingCart, FaPlus, FaMinus, FaTruck, FaShieldAlt, FaUndo } from 'react-icons/fa';
-import { CartContext } from '../context/CartContext';
+import { CartContext } from '../context/contexts';
 
 const CartScreen = () => {
   const { cartItems, addToCart, removeFromCart } = useContext(CartContext);

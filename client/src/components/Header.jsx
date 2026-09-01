@@ -1,9 +1,37 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaUser, FaSignOutAlt, FaSearch, FaChevronDown, FaBars, FaTimes } from 'react-icons/fa';
 import { useContext, useState, useRef } from 'react';
-import { CartContext } from '../context/CartContext';
-import { AuthContext } from '../context/AuthContext';
+import { CartContext } from '../context/contexts';
+import { AuthContext } from '../context/contexts';
 import useClickOutside from '../hooks/useClickOutside';
+
+/**
+ * The search field, shared by the desktop and mobile layouts.
+ *
+ * Declared at module scope rather than inside Header on purpose. A component
+ * defined during render gets a fresh identity every time, so React treats it
+ * as a different type and remounts its DOM — which for a controlled input
+ * means the field is destroyed and rebuilt on each keystroke, dropping focus
+ * after every character typed.
+ */
+const SearchInput = ({ value, onChange }) => (
+  <div className="relative">
+    <input
+      type="text"
+      value={value}
+      onChange={onChange}
+      placeholder="Search keyboards..."
+      className="w-full pl-3 pr-9 py-1.5 rounded-md bg-card-2 text-white placeholder-slate-500 border border-line focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+    />
+    <button
+      type="submit"
+      aria-label="Search"
+      className="absolute right-0 top-0 h-full px-3 text-slate-500 hover:text-white transition"
+    >
+      <FaSearch />
+    </button>
+  </div>
+);
 
 const Header = () => {
   const { cartItems } = useContext(CartContext);
@@ -34,24 +62,6 @@ const Header = () => {
     setMobileMenuOpen(false);
   };
 
-  const SearchInput = () => (
-    <div className="relative">
-      <input
-        type="text"
-        value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-        placeholder="Search keyboards..."
-        className="w-full pl-3 pr-9 py-1.5 rounded-md bg-card-2 text-white placeholder-slate-500 border border-line focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
-      />
-      <button
-        type="submit"
-        aria-label="Search"
-        className="absolute right-0 top-0 h-full px-3 text-slate-500 hover:text-white transition"
-      >
-        <FaSearch />
-      </button>
-    </div>
-  );
 
   return (
     <header className="sticky top-0 z-50 border-b border-line/70 bg-abyss/85 backdrop-blur-md text-white">
@@ -68,7 +78,7 @@ const Header = () => {
 
           {/* Search - desktop only, inline */}
           <form onSubmit={searchHandler} className="hidden md:block flex-1 max-w-md">
-            <SearchInput />
+            <SearchInput value={keyword} onChange={(e) => setKeyword(e.target.value)} />
           </form>
 
           {/* Desktop nav */}
@@ -190,7 +200,7 @@ const Header = () => {
 
         {/* Search - mobile only, always visible below the logo row */}
         <form onSubmit={searchHandler} className="md:hidden mt-3">
-          <SearchInput />
+          <SearchInput value={keyword} onChange={(e) => setKeyword(e.target.value)} />
         </form>
 
         {/* Mobile menu */}

@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../../services/api';
-import { AuthContext } from '../../../context/AuthContext';
+import { AuthContext } from '../../../context/contexts';
 import Pagination from '../../../components/Pagination';
 import { CATEGORIES } from '../../../constants/categories';
 

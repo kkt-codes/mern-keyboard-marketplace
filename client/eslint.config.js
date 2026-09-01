@@ -23,7 +23,14 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Components pulled out of data — `map(({ icon: Icon }) => <Icon />)`
+      // — are used only in JSX, which this rule doesn't count as a reference.
+      // The same allowance is needed for parameters as for variables, or every
+      // icon destructured from a config array reads as dead.
+      'no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^[A-Z_]' }
+      ],
     },
   },
 ])

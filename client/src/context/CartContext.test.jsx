@@ -2,8 +2,8 @@ import { useContext } from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CartContext } from './CartContext';
-import { AuthContext } from './AuthContext';
+import { CartContext } from './contexts';
+import { AuthContext } from './contexts';
 import { renderWithProviders, seedLoggedInUser, buildProduct } from '../test/renderWithProviders';
 
 vi.mock('react-hot-toast', () => ({

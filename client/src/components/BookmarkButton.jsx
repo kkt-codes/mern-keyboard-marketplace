@@ -1,8 +1,8 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaBookmark, FaRegBookmark } from 'react-icons/fa';
-import { AuthContext } from '../context/AuthContext';
-import { BookmarkContext } from '../context/BookmarkContext';
+import { AuthContext } from '../context/contexts';
+import { BookmarkContext } from '../context/contexts';
 
 /**
  * Bookmark-ribbon toggle. Meant to be positioned absolutely by the

@@ -1,7 +1,7 @@
 import { useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { CartContext } from '../context/CartContext';
+import { CartContext } from '../context/contexts';
 
 const PlaceOrderScreen = () => {
   const { cartItems, shippingAddress, paymentMethod, clearCart } = useContext(CartContext);

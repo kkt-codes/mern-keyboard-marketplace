@@ -1,9 +1,7 @@
-import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
-import { AuthContext } from './AuthContext';
-
-export const BookmarkContext = createContext();
+import { BookmarkContext, AuthContext } from './contexts';
 
 export const BookmarkProvider = ({ children }) => {
   const { user } = useContext(AuthContext);
@@ -23,6 +21,10 @@ export const BookmarkProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
+      // Loading server data on sign-in is what an effect is for. Satisfying
+      // the rule here would mean adopting a data-fetching library — a bigger
+      // change than the single extra render it saves.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchBookmarks();
     } else {
       // Logged out: clear so a different user's session never sees stale bookmarks.
@@ -71,5 +73,3 @@ export const BookmarkProvider = ({ children }) => {
     </BookmarkContext.Provider>
   );
 };
-
-export default BookmarkContext;

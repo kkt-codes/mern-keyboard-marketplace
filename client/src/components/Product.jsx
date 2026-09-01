@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import BookmarkButton from './BookmarkButton';
 import Rating from './Rating';
-import { CartContext } from '../context/CartContext';
+import { CartContext } from '../context/contexts';
 
 const Product = ({ product }) => {
   const { cartItems, addToCart } = useContext(CartContext);

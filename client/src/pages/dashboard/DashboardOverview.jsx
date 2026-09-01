@@ -10,8 +10,8 @@ import {
   FaTruck,
 } from 'react-icons/fa';
 import api from '../../services/api';
-import { AuthContext } from '../../context/AuthContext';
-import { BookmarkContext } from '../../context/BookmarkContext';
+import { AuthContext } from '../../context/contexts';
+import { BookmarkContext } from '../../context/contexts';
 
 const LOW_STOCK_THRESHOLD = 5;
 
