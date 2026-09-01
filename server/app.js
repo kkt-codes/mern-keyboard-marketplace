@@ -48,6 +48,24 @@ app.use(helmet());
 // signature, and dropping one with a 429 could lose a payment event.
 app.post('/api/orders/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
+// Cheap unauthenticated liveness probe for the host's health checks. Mounted
+// above the rate limiter on purpose: hosts poll this every few seconds, and a
+// 429 reads as the app being down, which can trigger a restart loop.
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', uptime: process.uptime() });
+});
+
+// Public front-end configuration. Right now this only says whether Stripe is
+// in test mode, which the checkout page uses to decide whether to show the
+// demo-card hint. Derived from the key itself rather than a separate flag, so
+// swapping in live keys silently removes the hint — there is no way to end up
+// advertising test cards on a real checkout.
+app.get('/api/config', (req, res) => {
+    res.json({
+        stripeTestMode: (process.env.STRIPE_SECRET_KEY || '').startsWith('sk_test_')
+    });
+});
+
 // General per-IP rate limit for everything under /api (a stricter one for
 // login/register lives in routes/authRoutes.js).
 app.use('/api', apiLimiter);
@@ -69,12 +87,6 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/cart', cartRoutes);
-
-// Cheap unauthenticated liveness probe for the host's health checks. Kept
-// under /api so the SPA fallback below never shadows it.
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', uptime: process.uptime() });
-});
 
 // API docs, generated from the @swagger JSDoc blocks in ./routes/*.js.
 // Left publicly reachable on purpose: this is a portfolio project, and the

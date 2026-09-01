@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import DemoPaymentNotice from '../components/DemoPaymentNotice';
 
 const OrderScreen = () => {
   const { id } = useParams();
@@ -21,8 +22,10 @@ const OrderScreen = () => {
     try {
       const { data } = await api.get(`/orders/${id}`);
       setOrder(data);
+      return data;
     } catch (err) {
       setError(err.response?.data?.message || err.message);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -40,23 +43,57 @@ const OrderScreen = () => {
     fetchOrder();
   }, [authLoading, user, id, navigate, fetchOrder]);
 
-  // Stripe redirects back here with ?payment=success|canceled. The webhook
-  // is what actually marks the order paid (usually already done by the time
-  // this redirect lands), so we just refetch to pick that up and surface a
-  // toast — this query param is purely a UX signal, never trusted for payment state.
+  // Stripe redirects back here with ?payment=success|canceled. That param says
+  // only that the browser came back from Stripe — the webhook is the sole thing
+  // that marks an order paid. So rather than announcing success on the strength
+  // of a URL, poll until the order itself says it is paid, and report what we
+  // actually found. Claiming success here would let the page congratulate you
+  // above a row still reading "Unpaid".
   useEffect(() => {
     const payment = searchParams.get('payment');
-    if (!payment) return;
-
-    if (payment === 'success') {
-      toast.success('Payment successful!');
-      fetchOrder();
-    } else if (payment === 'canceled') {
-      toast.error('Payment canceled');
-    }
 
     searchParams.delete('payment');
     setSearchParams(searchParams, { replace: true });
+
+    if (payment === 'canceled') {
+      toast.error('Payment canceled');
+      return;
+    }
+    if (payment !== 'success') return;
+
+    let cancelled = false;
+    const toastId = toast.loading('Confirming your payment...');
+
+    (async () => {
+      // The webhook usually beats the redirect, but it travels a separate path
+      // and can lag. Give it a bounded window instead of one hopeful refetch.
+      for (let attempt = 0; attempt < 10 && !cancelled; attempt += 1) {
+        const latest = await fetchOrder();
+
+        if (cancelled) return;
+
+        if (latest?.isPaid) {
+          toast.success('Payment confirmed', { id: toastId });
+          return;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+
+      if (cancelled) return;
+
+      // Money may well have been taken — saying "failed" would be as wrong as
+      // saying "successful". Describe the actual state and leave it there.
+      toast(
+        'Payment received, but we could not confirm it yet. Refresh in a moment — if it stays unpaid, contact support.',
+        { id: toastId, icon: '⏳', duration: 8000 }
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+      toast.dismiss(toastId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -283,6 +320,8 @@ const OrderScreen = () => {
                     </a>
                   </p>
                 )}
+
+                <DemoPaymentNotice />
               </>
             )}
 

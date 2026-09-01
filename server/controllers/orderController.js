@@ -62,6 +62,69 @@ const expireCheckoutSession = async (sessionId) => {
     }
 };
 
+/**
+ * Records a completed Checkout Session against the order.
+ *
+ * Shared by the webhook and the pre-checkout guard so both write the same
+ * fields — otherwise an order settled by one route would look subtly
+ * different from one settled by the other.
+ *
+ * Stock was already taken when checkout started, so nothing is decremented
+ * here; the reservation simply becomes permanent, and stays flagged so a
+ * later refund still knows to put the items back.
+ *
+ * @param {object} order Mongoose order document.
+ * @param {object} session Stripe Checkout Session.
+ */
+const applyPaidSession = async (order, session) => {
+    order.isPaid = true;
+    order.paidAt = Date.now();
+    order.paymentResult = {
+        id: session.payment_intent,
+        status: session.payment_status,
+        update_time: new Date().toISOString(),
+        email_address: session.customer_details?.email || ''
+    };
+    await order.save();
+};
+
+/**
+ * Asks Stripe whether the order's existing session was already paid, and
+ * settles the order if so.
+ *
+ * The `order.isPaid` flag is only ever set by the webhook, so it reports
+ * "unpaid" for the whole window between the buyer paying and the event
+ * arriving — and webhooks are not instant, nor guaranteed. Minting a fresh
+ * session during that window charges the buyer a second time, and expiring
+ * the old one cannot prevent it: Stripe refuses to expire a session that is
+ * already `complete`.
+ *
+ * So before starting another payment, ask Stripe what actually happened
+ * rather than trusting local state that is waiting on a message.
+ *
+ * @param {object} order Mongoose order document.
+ * @returns {Promise<boolean>} True if the order turned out to be paid.
+ */
+const settleIfSessionAlreadyPaid = async (order) => {
+    if (!order.checkoutSessionId) return false;
+
+    try {
+        const session = await stripe.checkout.sessions.retrieve(order.checkoutSessionId);
+
+        if (session.payment_status !== 'paid') return false;
+
+        await applyPaidSession(order, session);
+        return true;
+    } catch (error) {
+        // A stale or unreadable session id shouldn't block checkout. If Stripe
+        // is unreachable the session creation below will fail on its own.
+        console.warn(
+            `Could not check checkout session ${order.checkoutSessionId}: ${error.message}`
+        );
+        return false;
+    }
+};
+
 /** Puts reserved stock back on the shelf. */
 const releaseStock = async (items) => {
     if (items.length === 0) return;
@@ -198,6 +261,14 @@ const createCheckoutSession = async (req, res) => {
             return res.status(400).json({ message: 'Order has been cancelled' });
         }
 
+        // `isPaid` above is set by the webhook, so it still reads false while
+        // a completed payment is in flight. Confirm with Stripe before taking
+        // another one — this is the only thing standing between an impatient
+        // second click and a second charge.
+        if (await settleIfSessionAlreadyPaid(order)) {
+            return res.status(400).json({ message: 'Order is already paid' });
+        }
+
         // Take the stock now, before sending the buyer off to pay. Reserving
         // here rather than on payment closes the window where two people
         // could both be paying for the same last unit.
@@ -320,19 +391,7 @@ const stripeWebhookHandler = async (req, res) => {
                 );
             }
         } else if (order && !order.isPaid) {
-            order.isPaid = true;
-            order.paidAt = Date.now();
-            order.paymentResult = {
-                id: session.payment_intent,
-                status: session.payment_status,
-                update_time: new Date().toISOString(),
-                email_address: session.customer_details?.email || ''
-            };
-            // Stock was already taken when checkout started, so there's
-            // nothing to decrement here — the reservation simply becomes
-            // permanent. It stays flagged as reserved so a later refund
-            // still knows to put the items back.
-            await order.save();
+            await applyPaidSession(order, session);
         }
     }
 

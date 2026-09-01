@@ -543,3 +543,94 @@ describe('per-seller delivery', () => {
         expect(res.status).toBe(403);
     });
 });
+
+describe('paying twice for one order', () => {
+    /**
+     * The exact sequence that produced a real double charge: pay, have the
+     * webhook not arrive, then click Pay again. `order.isPaid` is only ever
+     * set by the webhook, so it still reads false — and the old session
+     * cannot be voided to compensate, because Stripe refuses to expire a
+     * session that is already complete.
+     */
+    const payAtStripeWithoutWebhook = async (token, orderId) => {
+        const res = await startCheckout(token, orderId);
+        const sessionId = (await Order.findById(orderId)).checkoutSessionId;
+        stripe.__markSessionComplete(sessionId);
+        return { res, sessionId };
+    };
+
+    it('refuses a second checkout when the first session was already paid', async () => {
+        const seller = await registerUser({ email: 'seller-twice@example.com', role: 'seller' });
+        const { token } = await registerUser({ email: 'twice@example.com' });
+        const product = await createProduct(seller.user._id, { countInStock: 5, price: 10 });
+        const order = (await createOrder(token, [{ product: product._id, qty: 1 }])).body;
+
+        await payAtStripeWithoutWebhook(token, order._id);
+
+        const second = await startCheckout(token, order._id);
+
+        expect(second.status).toBe(400);
+        expect(second.body.message).toMatch(/already paid/i);
+    });
+
+    it('settles the order from Stripe rather than waiting on the webhook', async () => {
+        const seller = await registerUser({ email: 'seller-settle@example.com', role: 'seller' });
+        const { token } = await registerUser({ email: 'settle@example.com' });
+        const product = await createProduct(seller.user._id, { countInStock: 5, price: 10 });
+        const order = (await createOrder(token, [{ product: product._id, qty: 1 }])).body;
+
+        await payAtStripeWithoutWebhook(token, order._id);
+        expect((await Order.findById(order._id)).isPaid).toBe(false);
+
+        await startCheckout(token, order._id);
+
+        const settled = await Order.findById(order._id);
+        expect(settled.isPaid).toBe(true);
+        expect(settled.paidAt).toBeTruthy();
+        expect(settled.paymentResult.id).toBeTruthy();
+    });
+
+    it('does not mint a second Stripe session', async () => {
+        const seller = await registerUser({ email: 'seller-nosecond@example.com', role: 'seller' });
+        const { token } = await registerUser({ email: 'nosecond@example.com' });
+        const product = await createProduct(seller.user._id, { countInStock: 5, price: 10 });
+        const order = (await createOrder(token, [{ product: product._id, qty: 1 }])).body;
+
+        const { sessionId } = await payAtStripeWithoutWebhook(token, order._id);
+
+        await startCheckout(token, order._id);
+
+        // Same session id means no second payment page was ever created, so
+        // there was nothing for the buyer to pay into a second time.
+        expect((await Order.findById(order._id)).checkoutSessionId).toBe(sessionId);
+    });
+
+    it('takes stock only once across the whole sequence', async () => {
+        const seller = await registerUser({ email: 'seller-stockonce@example.com', role: 'seller' });
+        const { token } = await registerUser({ email: 'stockonce@example.com' });
+        const product = await createProduct(seller.user._id, { countInStock: 5, price: 10 });
+        const order = (await createOrder(token, [{ product: product._id, qty: 2 }])).body;
+
+        await payAtStripeWithoutWebhook(token, order._id);
+        await startCheckout(token, order._id);
+
+        expect(await stockOf(product._id)).toBe(3);
+    });
+
+    it('still allows re-checkout when the first session went unpaid', async () => {
+        // Abandoning a checkout must not lock the buyer out of paying later.
+        const seller = await registerUser({ email: 'seller-retry@example.com', role: 'seller' });
+        const { token } = await registerUser({ email: 'retry@example.com' });
+        const product = await createProduct(seller.user._id, { countInStock: 5, price: 10 });
+        const order = (await createOrder(token, [{ product: product._id, qty: 1 }])).body;
+
+        const first = await startCheckout(token, order._id);
+        const firstSession = (await Order.findById(order._id)).checkoutSessionId;
+
+        const second = await startCheckout(token, order._id);
+
+        expect(first.status).toBe(200);
+        expect(second.status).toBe(200);
+        expect((await Order.findById(order._id)).checkoutSessionId).not.toBe(firstSession);
+    });
+});

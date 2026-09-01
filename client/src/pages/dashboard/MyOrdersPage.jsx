@@ -1,10 +1,33 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 import Pagination from '../../components/Pagination';
+
+/**
+ * Status pill for the Paid/Delivered columns.
+ *
+ * `inline-flex` rather than a bare `span`: an inline element takes its height
+ * from the line box, so `rounded-full` on one wrapping a short label (or worse,
+ * an icon) resolves to a radius larger than the box and renders as detached
+ * curved slivers instead of a pill.
+ */
+const StatusPill = ({ tone, children }) => {
+  const tones = {
+    good: 'bg-emerald-500/15 text-emerald-300',
+    bad: 'bg-red-500/15 text-red-300',
+    warn: 'bg-amber-500/15 text-amber-300'
+  };
+
+  return (
+    <span
+      className={`${tones[tone]} inline-flex items-center justify-center py-1 px-3 rounded-full text-xs leading-none whitespace-nowrap`}
+    >
+      {children}
+    </span>
+  );
+};
 
 const MyOrdersPage = () => {
   const { user, loading: authLoading } = useContext(AuthContext);
@@ -133,28 +156,22 @@ const MyOrdersPage = () => {
                   <td className="py-3 px-6">${order.totalPrice.toFixed(2)}</td>
                   <td className="py-3 px-6 text-center">
                     {order.isPaid ? (
-                      <span className="bg-emerald-500/15 text-emerald-300 py-1 px-3 rounded-full text-xs">
-                        {order.paidAt.substring(0, 10)}
-                      </span>
+                      <StatusPill tone="good">{order.paidAt.substring(0, 10)}</StatusPill>
                     ) : (
-                      <span className="bg-red-500/15 text-red-300 py-1 px-3 rounded-full text-xs">
-                        <FaTimes />
-                      </span>
+                      // A word, not a bare ✗: the paid state shows a date, so an
+                      // icon alone gave no hint what the column was telling you.
+                      <StatusPill tone="bad">Unpaid</StatusPill>
                     )}
                   </td>
                   <td className="py-3 px-6 text-center">
                     {order.isCancelled ? (
-                      <span className="bg-red-500/15 text-red-300 py-1 px-3 rounded-full text-xs">Cancelled</span>
+                      <StatusPill tone="bad">Cancelled</StatusPill>
                     ) : order.isDelivered ? (
-                      <span className="bg-emerald-500/15 text-emerald-300 py-1 px-3 rounded-full text-xs">
-                        {order.deliveredAt.substring(0, 10)}
-                      </span>
+                      <StatusPill tone="good">{order.deliveredAt.substring(0, 10)}</StatusPill>
                     ) : order.orderItems.some((item) => item.isDelivered) ? (
-                      <span className="bg-amber-500/15 text-amber-300 py-1 px-3 rounded-full text-xs">Partial</span>
+                      <StatusPill tone="warn">Partial</StatusPill>
                     ) : (
-                      <span className="bg-red-500/15 text-red-300 py-1 px-3 rounded-full text-xs">
-                        <FaTimes />
-                      </span>
+                      <StatusPill tone="warn">Pending</StatusPill>
                     )}
                   </td>
                   <td className="py-3 px-6 text-center space-x-2 whitespace-nowrap">

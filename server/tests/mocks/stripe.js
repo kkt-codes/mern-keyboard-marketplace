@@ -35,10 +35,21 @@ const stripeMock = {
                     id: nextId('cs'),
                     url: 'https://checkout.stripe.com/c/pay/cs_test_fake',
                     status: 'open',
+                    // Real sessions carry this from creation; it only flips to
+                    // 'paid' once the buyer actually completes checkout.
+                    payment_status: 'unpaid',
                     metadata,
                     expires_at
                 };
                 sessions.set(session.id, session);
+                return session;
+            },
+
+            async retrieve(id) {
+                const session = sessions.get(id);
+                if (!session) {
+                    throw new Error(`No such checkout session: ${id}`);
+                }
                 return session;
             },
 
@@ -84,9 +95,16 @@ const stripeMock = {
     __getSession: (id) => sessions.get(id),
     __countRefunds: () => refundsByPaymentIntent.size,
     __getRefund: (paymentIntent) => refundsByPaymentIntent.get(paymentIntent),
+    /** Models the buyer completing checkout: the session settles and a
+     *  payment intent comes into existence. */
     __markSessionComplete: (id) => {
         const session = sessions.get(id);
-        if (session) session.status = 'complete';
+        if (session) {
+            session.status = 'complete';
+            session.payment_status = 'paid';
+            session.payment_intent = session.payment_intent || nextId('pi');
+        }
+        return session;
     },
     __reset() {
         sessions.clear();

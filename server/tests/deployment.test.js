@@ -16,14 +16,58 @@ describe('deployment wiring', () => {
             expect(res.body.status).toBe('ok');
         });
 
-        it('is not rate limited into failing a liveness probe', async () => {
-            // Hosts poll this every few seconds; a 429 here reads as the app
-            // being down and can trigger a restart loop.
+        it('answers repeatedly', async () => {
+            // NB: the rate limiter is disabled under NODE_ENV=test, so this
+            // does not prove the probe is exempt from it — that comes from
+            // mounting it above the limiter, and was checked against a real
+            // server. This only guards the handler staying cheap and stateless.
             const results = await Promise.all(
                 Array.from({ length: 30 }, () => request(app).get('/api/health'))
             );
 
             expect(results.every((r) => r.status === 200)).toBe(true);
+        });
+    });
+
+    describe('public config', () => {
+        it('reports test mode for a test key', async () => {
+            // The harness sets a sk_test_ key, matching a portfolio deployment.
+            const res = await request(app).get('/api/config');
+
+            expect(res.status).toBe(200);
+            expect(res.body.stripeTestMode).toBe(true);
+        });
+
+        it('reports false for a live key, so the demo hint cannot show', async () => {
+            const original = process.env.STRIPE_SECRET_KEY;
+            try {
+                process.env.STRIPE_SECRET_KEY = 'sk_live_pretend';
+                const res = await request(app).get('/api/config');
+
+                expect(res.body.stripeTestMode).toBe(false);
+            } finally {
+                process.env.STRIPE_SECRET_KEY = original;
+            }
+        });
+
+        it('reports false when no key is configured at all', async () => {
+            const original = process.env.STRIPE_SECRET_KEY;
+            try {
+                delete process.env.STRIPE_SECRET_KEY;
+                const res = await request(app).get('/api/config');
+
+                expect(res.body.stripeTestMode).toBe(false);
+            } finally {
+                process.env.STRIPE_SECRET_KEY = original;
+            }
+        });
+
+        it('leaks no secrets', async () => {
+            const res = await request(app).get('/api/config');
+
+            expect(JSON.stringify(res.body)).not.toContain('sk_');
+            expect(JSON.stringify(res.body)).not.toContain('whsec_');
+            expect(Object.keys(res.body)).toEqual(['stripeTestMode']);
         });
     });
 
