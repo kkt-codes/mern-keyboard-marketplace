@@ -310,7 +310,8 @@ describe('payment webhook', () => {
 
         const saved = await Order.findById(order.body._id);
         expect(saved.isPaid).toBe(false);
-        expect(saved.refundResult.id).toBeTruthy();
+        expect(saved.refunds).toHaveLength(1);
+        expect(saved.refunds[0].id).toBeTruthy();
         expect(stripe.__getRefund('pi_race_condition')).toBeTruthy();
     });
 
@@ -344,7 +345,7 @@ describe('cancelling an order', () => {
         expect(res.status).toBe(200);
         expect(res.body.isCancelled).toBe(true);
         expect(res.body.cancelReason).toBe('Changed my mind');
-        expect(res.body.refundResult).toBeUndefined();
+        expect(res.body.refunds).toHaveLength(0);
     });
 
     it('hands back stock that was reserved but never paid for', async () => {
@@ -387,7 +388,8 @@ describe('cancelling an order', () => {
             .send({ reason: 'Wrong switches' });
 
         expect(res.status).toBe(200);
-        expect(res.body.refundResult.status).toBe('succeeded');
+        expect(res.body.refunds).toHaveLength(1);
+        expect(res.body.refunds[0].status).toBe('succeeded');
         expect(await stockOf(product._id)).toBe(4);
     });
 
@@ -632,5 +634,58 @@ describe('paying twice for one order', () => {
         expect(first.status).toBe(200);
         expect(second.status).toBe(200);
         expect((await Order.findById(order._id)).checkoutSessionId).not.toBe(firstSession);
+    });
+});
+
+describe('an order refunded more than once', () => {
+    /**
+     * A lagging webhook lets one order be paid twice, and each payment has to
+     * be given back on its own. Holding a single refund record meant the
+     * second overwrote the first, so the order understated what was returned.
+     */
+    it('records every refund rather than overwriting the last', async () => {
+        const seller = await registerUser({ email: 'seller-two-refunds@example.com', role: 'seller' });
+        const { token } = await registerUser({ email: 'two-refunds@example.com' });
+        const product = await createProduct(seller.user._id, { countInStock: 5, price: 10 });
+        const order = (await createOrder(token, [{ product: product._id, qty: 1 }])).body;
+
+        // Cancel it, then let two separate payments land on the dead order.
+        await request(app).put(`/api/orders/${order._id}/cancel`).set(authHeader(token)).send({});
+        await payViaWebhook(order._id, 'pi_first');
+        await payViaWebhook(order._id, 'pi_second');
+
+        const saved = await Order.findById(order._id);
+
+        expect(saved.refunds).toHaveLength(2);
+        expect(saved.refunds.map((r) => r.id)).toHaveLength(new Set(saved.refunds.map((r) => r.id)).size);
+    });
+
+    it('reports the combined value returned, not just the last refund', async () => {
+        const seller = await registerUser({ email: 'seller-total@example.com', role: 'seller' });
+        const { token } = await registerUser({ email: 'total@example.com' });
+        const product = await createProduct(seller.user._id, { countInStock: 5, price: 10 });
+        const order = (await createOrder(token, [{ product: product._id, qty: 1 }])).body;
+
+        await request(app).put(`/api/orders/${order._id}/cancel`).set(authHeader(token)).send({});
+        await payViaWebhook(order._id, 'pi_total_a');
+        await payViaWebhook(order._id, 'pi_total_b');
+
+        const saved = await Order.findById(order._id);
+        const summed = saved.refunds.reduce((total, r) => total + r.amount, 0);
+
+        expect(saved.refundedTotal).toBeCloseTo(summed, 2);
+        expect(saved.refundedTotal).toBeGreaterThan(saved.refunds[0].amount);
+    });
+
+    it('leaves refunds empty on an order that was never refunded', async () => {
+        const seller = await registerUser({ email: 'seller-norefund@example.com', role: 'seller' });
+        const { token } = await registerUser({ email: 'norefund@example.com' });
+        const product = await createProduct(seller.user._id, { countInStock: 5, price: 10 });
+        const order = (await createOrder(token, [{ product: product._id, qty: 1 }])).body;
+
+        const saved = await Order.findById(order._id);
+
+        expect(saved.refunds).toHaveLength(0);
+        expect(saved.refundedTotal).toBe(0);
     });
 });

@@ -84,7 +84,7 @@ const MyOrdersPage = () => {
     setCancellingId(order._id);
     try {
       const { data } = await api.put(`/orders/${order._id}/cancel`, { reason });
-      toast.success(data.refundResult ? 'Order cancelled and refunded' : 'Order cancelled');
+      toast.success(data.refunds?.length ? 'Order cancelled and refunded' : 'Order cancelled');
       setOrders((prev) => prev.map((o) => (o._id === order._id ? { ...o, ...data } : o)));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to cancel order');

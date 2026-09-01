@@ -302,7 +302,7 @@ router.route('/:id/deliver').put(protect, authorize('seller', 'admin'), markOrde
  *               reason: { type: string, example: Ordered the wrong switches }
  *     responses:
  *       200:
- *         description: The cancelled order, including refundResult when a refund was issued.
+ *         description: The cancelled order, including refunds when money was returned.
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Order' }

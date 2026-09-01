@@ -379,11 +379,11 @@ const stripeWebhookHandler = async (req, res) => {
                     payment_intent: session.payment_intent,
                     reason: 'requested_by_customer'
                 });
-                order.refundResult = {
+                order.refunds.push({
                     id: refund.id,
                     amount: refund.amount / 100,
                     status: refund.status
-                };
+                });
                 await order.save();
             } catch (error) {
                 console.error(
@@ -650,11 +650,11 @@ const cancelOrder = async (req, res) => {
                 reason: 'requested_by_customer'
             });
 
-            order.refundResult = {
+            order.refunds.push({
                 id: refund.id,
                 amount: refund.amount / 100,
                 status: refund.status
-            };
+            });
         } else {
             // Not paid yet, but a checkout page may still be open in a tab.
             // Void it, or the buyer could pay for an order we just cancelled.

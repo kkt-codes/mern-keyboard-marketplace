@@ -144,7 +144,7 @@ const OrderScreen = () => {
     try {
       const { data } = await api.put(`/orders/${id}/cancel`, { reason });
       setOrder(data);
-      toast.success(data.refundResult ? 'Order cancelled and refunded' : 'Order cancelled');
+      toast.success(data.refunds?.length ? 'Order cancelled and refunded' : 'Order cancelled');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to cancel order');
     } finally {
@@ -158,6 +158,8 @@ const OrderScreen = () => {
   const formatDate = (value) => (value ? new Date(value).toLocaleString() : '');
   const anyItemShipped = order.orderItems.some((item) => item.isDelivered);
   const canCancel = !order.isCancelled && !anyItemShipped;
+  const refunds = order.refunds || [];
+  const refundedTotal = refunds.reduce((sum, refund) => sum + refund.amount, 0);
 
   return (
     <div className="container mx-auto mt-10">
@@ -167,14 +169,16 @@ const OrderScreen = () => {
         <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300">
           <p className="font-semibold">
             Cancelled on {formatDate(order.cancelledAt)}
-            {order.refundResult && ` — $${order.refundResult.amount.toFixed(2)} refunded`}
+            {refunds.length > 0 && ` — $${refundedTotal.toFixed(2)} refunded`}
           </p>
           {order.cancelReason && <p className="mt-1 text-sm">Reason: {order.cancelReason}</p>}
-          {order.refundResult && (
-            <p className="mt-1 font-mono text-xs text-red-300/80">
-              Refund {order.refundResult.id} · {order.refundResult.status}
+          {/* Listed individually: an order paid twice gets refunded twice, and
+              collapsing that to one line hides money that actually moved. */}
+          {refunds.map((refund) => (
+            <p key={refund.id} className="mt-1 font-mono text-xs text-red-300/80">
+              Refund {refund.id} · ${refund.amount.toFixed(2)} · {refund.status}
             </p>
-          )}
+          ))}
         </div>
       )}
 
@@ -295,10 +299,10 @@ const OrderScreen = () => {
               <span>${order.totalPrice.toFixed(2)}</span>
             </div>
             
-            {order.refundResult && (
+            {refunds.length > 0 && (
               <div className="flex justify-between mb-4 text-sm text-red-300">
-                <span>Refunded</span>
-                <span>-${order.refundResult.amount.toFixed(2)}</span>
+                <span>Refunded{refunds.length > 1 && ` (${refunds.length} payments)`}</span>
+                <span>-${refundedTotal.toFixed(2)}</span>
               </div>
             )}
 

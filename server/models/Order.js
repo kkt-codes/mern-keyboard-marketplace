@@ -100,14 +100,33 @@ const orderSchema = mongoose.Schema({
     cancelReason: {
         type: String
     },
-    // Populated when a paid order is cancelled and Stripe refunds it.
-    refundResult: {
-        id: { type: String },
-        amount: { type: Number },
-        status: { type: String }
-    }
+    /**
+     * Every refund issued against this order.
+     *
+     * A list rather than a single record because an order genuinely can be
+     * refunded more than once: when a webhook lags, a buyer can pay twice,
+     * and each payment has to be given back separately. Holding one object
+     * meant the second refund overwrote the first, so the order reported
+     * less money returned than actually was.
+     */
+    refunds: [
+        {
+            id: { type: String, required: true },
+            amount: { type: Number, required: true },
+            status: { type: String },
+            createdAt: { type: Date, default: Date.now }
+        }
+    ]
 }, {
     timestamps: true
 });
+
+/** Total value refunded, across however many refunds it took. */
+orderSchema.virtual('refundedTotal').get(function () {
+    return Math.round(this.refunds.reduce((sum, r) => sum + r.amount, 0) * 100) / 100;
+});
+
+orderSchema.set('toJSON', { virtuals: true });
+orderSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('Order', orderSchema);

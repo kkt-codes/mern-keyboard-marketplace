@@ -148,14 +148,25 @@ const swaggerDefinition = {
                     isCancelled: { type: 'boolean' },
                     cancelledAt: { type: 'string', format: 'date-time' },
                     cancelReason: { type: 'string' },
-                    refundResult: {
-                        type: 'object',
-                        description: 'Present when a paid order was cancelled and refunded.',
-                        properties: {
-                            id: { type: 'string', example: 're_3abc123' },
-                            amount: { type: 'number', example: 149.49 },
-                            status: { type: 'string', example: 'succeeded' },
+                    refunds: {
+                        type: 'array',
+                        description:
+                            'Every refund issued against this order. Usually zero or one, but an order paid twice (a lagging webhook can allow this) is refunded once per payment.',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                id: { type: 'string', example: 're_3abc123' },
+                                amount: { type: 'number', example: 149.49 },
+                                status: { type: 'string', example: 'succeeded' },
+                                createdAt: { type: 'string', format: 'date-time' },
+                            },
                         },
+                    },
+                    refundedTotal: {
+                        type: 'number',
+                        readOnly: true,
+                        description: 'Sum of every refund amount, for convenience.',
+                        example: 149.49,
                     },
                     createdAt: { type: 'string', format: 'date-time' },
                 },
