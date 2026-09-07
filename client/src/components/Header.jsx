@@ -1,6 +1,6 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { FaShoppingCart, FaUser, FaSignOutAlt, FaSearch, FaChevronDown, FaBars, FaTimes } from 'react-icons/fa';
-import { useContext, useState, useRef } from 'react';
+import { useContext, useState, useRef, useEffect } from 'react';
 import { CartContext } from '../context/contexts';
 import { AuthContext } from '../context/contexts';
 import useClickOutside from '../hooks/useClickOutside';
@@ -33,14 +33,26 @@ const SearchInput = ({ value, onChange }) => (
   </div>
 );
 
+const SEARCH_DEBOUNCE_MS = 350;
+
 const Header = () => {
   const { cartItems } = useContext(CartContext);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [infoDropdownOpen, setInfoDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [keyword, setKeyword] = useState('');
+
+  // On the products page this box *is* the results filter, so it edits the URL
+  // as you type. Everywhere else it's a nav control: type, submit, go — going
+  // live there would yank you off the page mid-word.
+  const onProductsPage = location.pathname === '/products';
+  const urlKeyword = searchParams.get('keyword') || '';
+
+  const [keyword, setKeyword] = useState(urlKeyword);
+  const pushTimer = useRef(null);
 
   const userMenuRef = useRef(null);
   const infoMenuRef = useRef(null);
@@ -56,10 +68,62 @@ const Header = () => {
     navigate('/login');
   };
 
+  /** Writes the keyword into the URL, leaving the other filters alone. */
+  const pushKeyword = (value) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        const trimmed = value.trim();
+        if (trimmed) next.set('keyword', trimmed);
+        else next.delete('keyword');
+        next.delete('page'); // a changed search starts from page 1
+        return next;
+      },
+      // Replace, so a search doesn't leave one history entry per pause.
+      { replace: true }
+    );
+  };
+
+  // While browsing products the URL owns the keyword, so mirror it back into
+  // the box whenever it changes on its own: Clear Filters, Back, a category
+  // click. Dropping the pending push is the part that matters — without it a
+  // half-typed word would land in the URL just after something else cleared it.
+  //
+  // Mirroring an external value into local state is what the rule warns about,
+  // but the URL genuinely is an external system here: it changes from links and
+  // the Back button, not just from this field. The alternative is remounting
+  // the header on every search param change, which would drop focus mid-word —
+  // the exact bug this box already had once.
+  useEffect(() => {
+    if (!onProductsPage) return;
+    clearTimeout(pushTimer.current);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setKeyword(urlKeyword);
+  }, [urlKeyword, onProductsPage]);
+
+  useEffect(() => () => clearTimeout(pushTimer.current), []);
+
+  const keywordChangeHandler = (e) => {
+    const { value } = e.target;
+    setKeyword(value);
+    if (!onProductsPage) return;
+
+    clearTimeout(pushTimer.current);
+    pushTimer.current = setTimeout(() => pushKeyword(value), SEARCH_DEBOUNCE_MS);
+  };
+
   const searchHandler = (e) => {
     e.preventDefault();
-    navigate(keyword.trim() ? `/products?keyword=${encodeURIComponent(keyword.trim())}` : '/products');
     setMobileMenuOpen(false);
+
+    if (onProductsPage) {
+      // Already looking at results — Enter just flushes the pending debounce.
+      clearTimeout(pushTimer.current);
+      pushKeyword(keyword);
+      return;
+    }
+
+    navigate(keyword.trim() ? `/products?keyword=${encodeURIComponent(keyword.trim())}` : '/products');
   };
 
 
@@ -78,7 +142,7 @@ const Header = () => {
 
           {/* Search - desktop only, inline */}
           <form onSubmit={searchHandler} className="hidden md:block flex-1 max-w-md">
-            <SearchInput value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+            <SearchInput value={keyword} onChange={keywordChangeHandler} />
           </form>
 
           {/* Desktop nav */}
@@ -200,7 +264,7 @@ const Header = () => {
 
         {/* Search - mobile only, always visible below the logo row */}
         <form onSubmit={searchHandler} className="md:hidden mt-3">
-          <SearchInput value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+          <SearchInput value={keyword} onChange={keywordChangeHandler} />
         </form>
 
         {/* Mobile menu */}
