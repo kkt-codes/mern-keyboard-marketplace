@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { AuthContext } from '../../context/contexts';
 import Pagination from '../../components/Pagination';
+import useDebouncedValue from '../../hooks/useDebouncedValue';
 
 const LOW_STOCK_THRESHOLD = 5;
 
@@ -16,12 +17,13 @@ const MyProductsPage = () => {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [keyword, setKeyword] = useState('');
+  const [keywordInput, setKeywordInput] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
+
+  const keyword = useDebouncedValue(keywordInput);
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
       const { data } = await api.get('/products/myproducts', {
         params: { page, keyword, lowStock: lowStockOnly || undefined },
       });
@@ -46,7 +48,7 @@ const MyProductsPage = () => {
   }, [authLoading, user, navigate, page, keyword, lowStockOnly]);
 
   const keywordChangeHandler = (e) => {
-    setKeyword(e.target.value);
+    setKeywordInput(e.target.value);
     setPage(1);
   };
   const lowStockChangeHandler = (e) => {
@@ -67,6 +69,9 @@ const MyProductsPage = () => {
     }
   };
 
+  // Only the very first load blanks the page. Refetches leave the search box
+  // mounted — unmounting it mid-search destroyed the focused input and threw
+  // focus back to the body after every character typed.
   if (loading) return <h2 className="text-center text-xl mt-10">Loading...</h2>;
   if (error) return <h2 className="text-center text-red-400 mt-10">{error}</h2>;
 
@@ -85,7 +90,7 @@ const MyProductsPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
         <input
           type="text"
-          value={keyword}
+          value={keywordInput}
           onChange={keywordChangeHandler}
           placeholder="Search by product name..."
           className="flex-1 px-3 py-2 border border-line rounded text-sm"

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaSearch } from 'react-icons/fa';
 import api from '../services/api';
 import Product from '../components/Product';
+import useDebouncedValue from '../hooks/useDebouncedValue';
 import { CATEGORIES } from '../constants/categories';
 
 /**
@@ -20,9 +21,12 @@ const ProductsScreen = () => {
   const page = Number(searchParams.get('page')) || 1;
 
   const [priceInputs, setPriceInputs] = useState({ min: minPrice, max: maxPrice });
+  const [keywordInput, setKeywordInput] = useState(keyword);
   const [data, setData] = useState({ products: [], page: 1, pages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const debouncedKeyword = useDebouncedValue(keywordInput);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -48,6 +52,27 @@ const ProductsScreen = () => {
   useEffect(() => {
     setPriceInputs({ min: minPrice, max: maxPrice });
   }, [minPrice, maxPrice]);
+
+  // Typing searches. The input stays instant because it owns its own state;
+  // only the settled value reaches the URL, which is what triggers a fetch.
+  useEffect(() => {
+    if (debouncedKeyword === keyword) return;
+
+    const next = new URLSearchParams(searchParams);
+    if (debouncedKeyword) next.set('keyword', debouncedKeyword);
+    else next.delete('keyword');
+    next.delete('page');
+
+    // `replace` so a search doesn't leave one history entry per pause —
+    // Back should return to wherever the user came from, not retype the word.
+    setSearchParams(next, { replace: true });
+  }, [debouncedKeyword, keyword, searchParams, setSearchParams]);
+
+  // And sync the other way when the URL changes on its own: the header's
+  // search box, Clear Filters, or the Back button.
+  useEffect(() => {
+    setKeywordInput(keyword);
+  }, [keyword]);
 
   const updateParams = (updates) => {
     const next = new URLSearchParams(searchParams);
@@ -94,11 +119,29 @@ const ProductsScreen = () => {
             )}
           </div>
 
-          {keyword && (
-            <p className="text-sm text-slate-400 mb-4">
-              Searching for <strong>&ldquo;{keyword}&rdquo;</strong>
-            </p>
-          )}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-slate-400 mb-2">Search</h3>
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none" />
+              <input
+                type="text"
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                placeholder="Search keyboards..."
+                aria-label="Search keyboards"
+                className="w-full pl-8 pr-8 py-1.5 border border-line rounded text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              {keywordInput && (
+                <button
+                  onClick={() => setKeywordInput('')}
+                  aria-label="Clear search"
+                  className="absolute right-0 top-0 h-full px-2.5 text-slate-500 hover:text-white transition"
+                >
+                  <FaTimes className="text-xs" />
+                </button>
+              )}
+            </div>
+          </div>
 
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-slate-400 mb-2">Category</h3>

@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { AuthContext } from '../../../context/contexts';
 import Pagination from '../../../components/Pagination';
+import useDebouncedValue from '../../../hooks/useDebouncedValue';
 
 const AllOrdersPage = () => {
   const { user, loading: authLoading } = useContext(AuthContext);
@@ -17,8 +18,10 @@ const AllOrdersPage = () => {
   const [error, setError] = useState(null);
   const [deliveringId, setDeliveringId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
-  const [keyword, setKeyword] = useState('');
+  const [keywordInput, setKeywordInput] = useState('');
   const [status, setStatus] = useState('');
+
+  const keyword = useDebouncedValue(keywordInput);
 
   useEffect(() => {
     if (authLoading) return;
@@ -44,7 +47,7 @@ const AllOrdersPage = () => {
   }, [authLoading, user, navigate, page, keyword, status]);
 
   const keywordChangeHandler = (e) => {
-    setKeyword(e.target.value);
+    setKeywordInput(e.target.value);
     setPage(1);
   };
   const statusChangeHandler = (e) => {
@@ -100,7 +103,7 @@ const AllOrdersPage = () => {
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input
           type="text"
-          value={keyword}
+          value={keywordInput}
           onChange={keywordChangeHandler}
           placeholder="Search by buyer name or email..."
           className="flex-1 px-3 py-2 border border-line rounded text-sm"

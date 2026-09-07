@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { AuthContext } from '../../../context/contexts';
 import Pagination from '../../../components/Pagination';
+import useDebouncedValue from '../../../hooks/useDebouncedValue';
 
 const ROLE_BADGE = {
   admin: 'bg-violet-500/15 text-violet-300',
@@ -22,8 +23,10 @@ const UsersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [busyId, setBusyId] = useState(null);
-  const [keyword, setKeyword] = useState('');
+  const [keywordInput, setKeywordInput] = useState('');
   const [role, setRole] = useState('');
+
+  const keyword = useDebouncedValue(keywordInput);
 
   const fetchUsers = async () => {
     try {
@@ -52,7 +55,7 @@ const UsersPage = () => {
   // Any filter change starts back at page 1 — a stale page number from a
   // wider result set could otherwise land past the end of a narrower one.
   const keywordChangeHandler = (e) => {
-    setKeyword(e.target.value);
+    setKeywordInput(e.target.value);
     setPage(1);
   };
   const roleChangeHandler = (e) => {
@@ -101,7 +104,7 @@ const UsersPage = () => {
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input
           type="text"
-          value={keyword}
+          value={keywordInput}
           onChange={keywordChangeHandler}
           placeholder="Search by name or email..."
           className="flex-1 px-3 py-2 border border-line rounded text-sm"
