@@ -125,7 +125,13 @@ mern-keyboard-marketplace/
    systemctl status mongod --no-pager
    ```
 
-4. **Run the app** — two servers, in separate terminals:
+4. **Load the demo data** (optional, but recommended for a first look):
+   ```bash
+   cd server && npm run seed
+   ```
+   See [Demo data](#demo-data) below for what this creates and the accounts it gives you.
+
+5. **Run the app** — two servers, in separate terminals:
    ```bash
    # Terminal 1
    cd server && npm run dev      # http://localhost:5000
@@ -135,7 +141,7 @@ mern-keyboard-marketplace/
    ```
    The Vite dev server proxies `/api/*` requests to `localhost:5000`, so open `http://localhost:5173` in your browser.
 
-5. **Forward Stripe webhooks** (third terminal) — orders are only marked paid by webhook, so
+6. **Forward Stripe webhooks** (third terminal) — orders are only marked paid by webhook, so
    checkout will not complete without this running locally:
    ```bash
    stripe login
@@ -144,11 +150,55 @@ mern-keyboard-marketplace/
    Copy the `whsec_...` it prints into `STRIPE_WEBHOOK_SECRET` and restart the server. Pay with
    Stripe's test card `4242 4242 4242 4242`, any future expiry, any CVC.
 
+## Demo data
+
+```bash
+cd server
+npm run seed            # wipe, then insert the demo store
+npm run seed:destroy    # wipe only, leaving an empty database
+```
+
+This exists so the app is worth looking at on the first run. Without it you land on an empty
+storefront and have to register an account, promote it to seller, and hand-write products before
+anything on the screen does anything.
+
+**`npm run seed` deletes every user, product and order in the database it points at** — it is not
+additive. It reads `MONGO_URI` from `server/.env` like the rest of the app, and refuses to run when
+`NODE_ENV=production` unless you pass `--force`.
+
+You get 7 accounts, all with the password **`password123`**:
+
+| Email | Role | What they show off |
+|---|---|---|
+| `admin@example.com` | admin | User management, all orders, all products |
+| `nova@example.com` | seller | 5 listings, including a low-stock and an out-of-stock item |
+| `artisan@example.com` | seller | 4 one-off custom builds, all low stock |
+| `depot@example.com` | seller | 6 mainstream peripherals |
+| `kofi@example.com` | buyer | A delivered order, a cancelled+refunded one, 3 bookmarks |
+| `lena@example.com` | buyer | An order awaiting delivery, and one split across two sellers |
+| `sam@example.com` | buyer | An unpaid order still showing a Pay Now button |
+
+Plus 15 products across all five categories ($22.99–$349.00, so the price filter has range), 12
+reviews spread unevenly across them, and 5 orders covering every state the dashboards branch on —
+delivered, paid-and-waiting, unpaid, cancelled-with-refund, and one half-shipped across two sellers.
+
+Two things worth knowing:
+
+- **The product photographs are real.** Each one is a picture of the keyboard the listing claims to
+  be — the Keychron K8 image is a K8, the SteelSeries Apex 5 image is an Apex 5. They are
+  Creative Commons images from Wikimedia Commons, stored in `client/public/images/products/` and
+  credited individually in [`CREDITS.md`](client/public/images/products/CREDITS.md). Nothing is
+  fetched at runtime, so the demo works offline and needs no Cloudinary account.
+- **Seeded payments are not real Stripe payments.** The paid orders carry placeholder payment
+  references, so cancelling a *seeded* paid order fails at the refund step — Stripe has never heard
+  of that payment intent. Orders you place yourself cancel and refund normally. Only Lena's
+  `$124.99` order is affected; the rest are either already delivered, unpaid, or already cancelled.
+
 ## Testing
 
 ```bash
-cd server && npm test     # 103 tests
-cd client && npm test     # 47 tests
+cd server && npm test     # 123 tests
+cd client && npm test     # 71 tests
 ```
 
 Both suites are self-contained — no running server, no dev database, no network. The backend spins
@@ -180,6 +230,8 @@ Every endpoint is documented with request/response schemas, and you can authenti
 |---|---|
 | `npm run dev` | Start with nodemon (auto-restart on change) |
 | `npm start` | Start normally |
+| `npm run seed` | Replace all data with the demo store |
+| `npm run seed:destroy` | Delete all users, products and orders |
 | `npm test` | Run the test suite |
 | `npm run test:watch` | Run tests in watch mode |
 

@@ -162,7 +162,10 @@ const ProductScreen = () => {
               <div key={review._id} className="border-b border-line pb-4">
                 <div className="flex items-center justify-between mb-1">
                   <strong className="text-slate-100">{review.name}</strong>
-                  <span className="text-xs text-slate-500">{review.createdAt.substring(0, 10)}</span>
+                  {/* Optional chaining because a cosmetic date is not worth
+                      crashing the page over — a review with no timestamp
+                      should just render without one. */}
+                  <span className="text-xs text-slate-500">{review.createdAt?.substring(0, 10)}</span>
                 </div>
                 <Rating value={review.rating} size="text-sm" />
                 <p className="text-slate-300 mt-1">{review.comment}</p>
